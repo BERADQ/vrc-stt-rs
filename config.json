@@ -1,0 +1,13 @@
+{
+  "model_path": "./model/medium.bin",
+  "vad": {
+    "threshold_level": 0.05,
+    "debounce_times": 32
+  },
+  "language": "zh",
+  "initial_prompt": "使用简体中文输出",
+  "udp": {
+    "port": 5005,
+    "to": "127.0.0.1:9000"
+  }
+}
