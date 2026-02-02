@@ -1,0 +1,40 @@
+_version: 2
+failed.find.input_device:
+  en: "Failed to find input device"
+  zh-CN: "找不到输入设备"
+device.name:
+  en: "Device name: %{name}"
+  zh-CN: "设备名称：%{name}"
+no.supported.16kHz:
+  en: "No input config supporting 16000 Hz"
+  zh-CN: "找不到支持 16000 Hz 的输入配置"
+error.prefix:
+  en: "Error: %{error}"
+  zh-CN: "错误：%{error}"
+recording.start:
+  en: "Recording started"
+  zh-CN: "开始录音"
+recording.end:
+  en: "Recording ended"
+  zh-CN: "录音结束"
+audio.too.short:
+  en: "Recording ended, audio too short (%{length} samples), ignoring"
+  zh-CN: "录音结束，音频太短（%{length} 个样本），忽略"
+ctrlc.signal:
+  en: "Received Ctrl+C signal, exiting..."
+  zh-CN: "收到 Ctrl+C 信号，正在退出..."
+transcription.segment.error:
+  en: "Error getting text for segment %{error:?}"
+  zh-CN: "获取片段文本时出错 %{error:?}"
+no.transcription.result:
+  en: "No transcription result"
+  zh-CN: "无转录结果"
+config.file.open.error:
+  en: "Failed to open config file"
+  zh-CN: "无法打开配置文件"
+config.file.parse.error:
+  en: "Failed to parse config file"
+  zh-CN: "无法解析配置文件"
+transcription.complete:
+  en: "Transcription complete: %{text}"
+  zh-CN: "转录完成: %{text}"

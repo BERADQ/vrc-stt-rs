@@ -1,5 +1,6 @@
 use chrono;
 use eframe::egui;
+use rust_i18n::t;
 use std::sync::{mpsc, Arc, Once};
 
 const FONT: &[u8] = include_bytes!("assets/font.ttf");
@@ -87,7 +88,7 @@ impl eframe::App for VrcSttApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             // Current text display
             ui.horizontal(|ui| {
-                ui.label("当前:");
+                ui.label(t!("current.prefix"));
                 ui.add(
                     egui::widgets::Label::new(
                         egui::RichText::new(&self.current_text)
@@ -101,14 +102,14 @@ impl eframe::App for VrcSttApp {
             ui.separator();
 
             // History section
-            ui.heading("历史记录");
+            ui.heading(t!("history.records"));
 
             egui::ScrollArea::vertical()
                 .max_height(400.0)
                 .show(ui, |ui| {
                     if self.history.is_empty() {
                         ui.label(
-                            egui::RichText::new("暂无历史记录")
+                            egui::RichText::new(t!("no.history.records"))
                                 .color(egui::Color32::from_gray(128))
                                 .italics(),
                         );
@@ -152,10 +153,10 @@ impl eframe::App for VrcSttApp {
             // Status bar
             ui.horizontal(|ui| {
                 ui.label(
-                    egui::RichText::new(format!(
-                        "历史记录: {}/{}",
-                        self.history.len(),
-                        self.max_history
+                    egui::RichText::new(t!(
+                        "history.count",
+                        count = self.history.len(),
+                        max = self.max_history
                     ))
                     .color(egui::Color32::from_gray(150))
                     .size(12.0),

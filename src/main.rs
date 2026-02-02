@@ -1,14 +1,17 @@
 use ctrlc;
 use eframe::egui;
+use rust_i18n::{i18n, t};
 use std::{sync::mpsc::channel, thread::JoinHandle};
 use vad::VadWrapper;
 
 use cpal::{
-    StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
+    StreamConfig,
 };
 
 use crate::{config::CONFIG, osc::connect, vad::VadEvent};
+
+i18n!("locales", fallback = "en");
 
 mod config;
 mod gui;
@@ -16,8 +19,8 @@ mod osc;
 mod vad;
 mod whisper;
 
-extern "C" fn log_callback(
-    _level: ::std::os::raw::c_uint,
+extern "C" fn log_callback<T>(
+    _level: T,
     text: *const ::std::os::raw::c_char,
     _user_data: *mut ::std::os::raw::c_void,
 ) {
@@ -36,22 +39,22 @@ fn main() -> anyhow::Result<()> {
 
     let device = host
         .default_input_device()
-        .expect("Failed to find input device");
+        .expect(&t!("failed.find.input_device"));
 
     let device_description = device.description()?;
-    println!("Device name: {}", device_description.name());
+    println!("{}", t!("device.name", name = device_description.name()));
 
     let config = device
         .supported_input_configs()?
         .find(|c| c.min_sample_rate() <= 16000 && c.max_sample_rate() >= 16000)
-        .ok_or_else(|| anyhow::anyhow!("No input config supporting 16000 Hz"))?
+        .ok_or_else(|| anyhow::anyhow!("{}", t!("no.supported.16kHz")))?
         .with_sample_rate(16000);
 
     let mut config: StreamConfig = config.into();
     config.buffer_size = cpal::BufferSize::Fixed(16 * 10);
     config.channels = 1;
 
-    let err_fn = |err| eprintln!("Error: {}", err);
+    let err_fn = |err| eprintln!("{}", t!("error.prefix", error = err));
 
     let mut vad = VadWrapper::new();
 
@@ -61,7 +64,7 @@ fn main() -> anyhow::Result<()> {
         &config,
         move |data: &[i16], _: &_| match vad.segment_parse(data).unwrap() {
             VadEvent::Start => {
-                println!("Start recording");
+                println!("{}", t!("recording.start"));
                 tx.send(VadEvent::Recording).unwrap();
             }
             VadEvent::Pending => {}
@@ -84,16 +87,13 @@ fn main() -> anyhow::Result<()> {
                 VadEvent::End(voice) => {
                     let voice_len = voice.len();
                     if voice_len > 16 * 10 * 30 {
-                        println!("Recording ended.",);
+                        println!("{}", t!("recording.end"));
                         let text = whisper.transcribe(&voice)?;
-                        println!("Transcription complete: {}", text);
+                        println!("{}", t!("transcription.complete", text = &text));
                         osc.send_message(&text)?;
                         str_tx.send(text)?;
                     } else {
-                        println!(
-                            "Recording ended, audio too short ({} samples), ignoring",
-                            voice_len
-                        );
+                        println!("{}", t!("audio.too.short", length = voice_len));
                     }
                     osc.send_set_typing(false)?;
                 }
@@ -109,7 +109,7 @@ fn main() -> anyhow::Result<()> {
     stream.play()?;
 
     ctrlc::set_handler(|| {
-        println!("Received Ctrl+C signal, exiting...");
+        println!("{}", t!("ctrlc.signal"));
         std::process::exit(0);
     })
     .expect("Failed to set Ctrl+C handler");

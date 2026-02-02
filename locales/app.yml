@@ -1,0 +1,13 @@
+_version: 2
+current.prefix:
+  en: "Current:"
+  zh-CN: "当前："
+history.records:
+  en: "History Records"
+  zh-CN: "历史记录"
+no.history.records:
+  en: "No history records"
+  zh-CN: "暂无历史记录"
+history.count:
+  en: "History: %{count}/%{max}"
+  zh-CN: "历史记录: %{count}/%{max}"

@@ -1,3 +1,4 @@
+use rust_i18n::t;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
 use crate::config::CONFIG;
@@ -47,13 +48,13 @@ impl Whisper {
                     result.push_str(text);
                 }
                 Err(e) => {
-                    eprintln!("Error getting text for segment {:?}", e);
+                    eprintln!("{}", t!("transcription.segment.error", error = e));
                 }
             }
         }
 
         if result.is_empty() {
-            eprintln!("No transcription result");
+            eprintln!("{}", t!("no.transcription.result"));
         }
 
         Ok(result)

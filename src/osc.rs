@@ -1,6 +1,6 @@
 use std::net::{ToSocketAddrs, UdpSocket};
 
-use rosc::{OscMessage, OscPacket, OscType, encoder};
+use rosc::{encoder, OscMessage, OscPacket, OscType};
 
 use crate::config::CONFIG;
 
