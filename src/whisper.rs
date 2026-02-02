@@ -21,7 +21,9 @@ impl Whisper {
             beam_size: 5,
             patience: -1.0,
         });
-        params.set_initial_prompt(&CONFIG.initial_prompt);
+        if let Some(initial_prompt) = &CONFIG.initial_prompt {
+            params.set_initial_prompt(initial_prompt);
+        }
         params.set_language(Some(&CONFIG.language));
         params.set_translate(false);
         params.set_no_timestamps(true);

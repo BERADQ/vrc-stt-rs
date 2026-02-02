@@ -1,11 +1,11 @@
 {
-  "model_path": "./model/medium.bin",
+  "model_path": "./model/large-turbo-zh.bin",
   "vad": {
-    "threshold_level": 0.05,
-    "debounce_times": 32
+    "threshold_level": 0.1,
+    "debounce_times": 80
   },
   "language": "zh",
-  "initial_prompt": "使用简体中文输出",
+  "initial_prompt": "",
   "udp": {
     "port": 5005,
     "to": "127.0.0.1:9000"

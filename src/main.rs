@@ -1,27 +1,33 @@
 use ctrlc;
-use std::sync::mpsc::channel;
+use eframe::egui;
+use std::{sync::mpsc::channel, thread::JoinHandle};
 use vad::VadWrapper;
 
 use cpal::{
-    StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
+    StreamConfig,
 };
 
 use crate::{config::CONFIG, osc::connect, vad::VadEvent};
 
 mod config;
+mod gui;
 mod osc;
 mod vad;
 mod whisper;
 
 extern "C" fn log_callback(
     _level: u32,
-    _text: *const ::std::os::raw::c_char,
+    text: *const ::std::os::raw::c_char,
     _user_data: *mut ::std::os::raw::c_void,
 ) {
+    log::debug!("{}", unsafe {
+        std::ffi::CStr::from_ptr(text).to_string_lossy()
+    })
 }
 
 fn main() -> anyhow::Result<()> {
+    env_logger::init();
     unsafe {
         whisper_rs::set_log_callback(Some(log_callback), std::ptr::null_mut());
     }
@@ -43,7 +49,7 @@ fn main() -> anyhow::Result<()> {
 
     let err_fn = |err| eprintln!("Error: {}", err);
 
-    let vad = VadWrapper::new();
+    let mut vad = VadWrapper::new();
 
     let (tx, rx) = channel();
 
@@ -64,23 +70,28 @@ fn main() -> anyhow::Result<()> {
                     );
                 }
             }
+            _ => {}
         },
         err_fn,
         None,
     )?;
 
-    std::thread::spawn(move || {
-        let mut whisper = whisper::Whisper::new().unwrap();
-        let mut osc = connect(("0.0.0.0", CONFIG.udp.port)).unwrap();
+    let (str_tx, str_rx) = channel();
+
+    let _: JoinHandle<anyhow::Result<()>> = std::thread::spawn(move || {
+        let mut whisper = whisper::Whisper::new()?;
+        let mut osc = connect(("0.0.0.0", CONFIG.udp.port))?;
         while let Ok(voice) = rx.recv() {
             println!(
                 "Starting transcription, audio length {} samples",
                 voice.len()
             );
-            let text = whisper.transcribe(&voice).unwrap();
+            let text = whisper.transcribe(&voice)?;
             println!("Transcription complete: {}", text);
-            osc.send_message(&text).unwrap();
+            osc.send_message(&text)?;
+            str_tx.send(text)?;
         }
+        Ok(())
     });
 
     stream.play()?;
@@ -91,8 +102,17 @@ fn main() -> anyhow::Result<()> {
     })
     .expect("Failed to set Ctrl+C handler");
 
-    // Block main thread until signal is received
-    loop {
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    }
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([400.0, 600.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "VRC STT",
+        options,
+        Box::new(|_cc| Ok(Box::new(gui::VrcSttApp::new(str_rx)))),
+    )
+    .unwrap();
+
+    Ok(())
 }

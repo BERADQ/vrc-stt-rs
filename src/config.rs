@@ -8,7 +8,7 @@ pub struct Config {
     pub vad: VadConfig,
     pub language: String,
     pub udp: UdpConfig,
-    pub initial_prompt: String,
+    pub initial_prompt: Option<String>,
 }
 
 #[derive(Deserialize)]
