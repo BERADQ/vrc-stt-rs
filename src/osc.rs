@@ -1,6 +1,6 @@
 use std::net::{ToSocketAddrs, UdpSocket};
 
-use rosc::{encoder, OscMessage, OscPacket, OscType};
+use rosc::{OscMessage, OscPacket, OscType, encoder};
 
 use crate::config::CONFIG;
 
@@ -26,6 +26,15 @@ impl VRCMessageOSC {
                 OscType::Bool(true),
                 OscType::Bool(false),
             ],
+        }))?;
+        self.socket.send_to(&msg_buf, &CONFIG.udp.to)?;
+        Ok(())
+    }
+
+    pub fn send_set_typing(&mut self, is_typing: bool) -> anyhow::Result<()> {
+        let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
+            addr: "/chatbox/typing".to_owned(),
+            args: vec![OscType::Bool(is_typing)],
         }))?;
         self.socket.send_to(&msg_buf, &CONFIG.udp.to)?;
         Ok(())

@@ -4,8 +4,8 @@ use std::{sync::mpsc::channel, thread::JoinHandle};
 use vad::VadWrapper;
 
 use cpal::{
-    traits::{DeviceTrait, HostTrait, StreamTrait},
     StreamConfig,
+    traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 
 use crate::{config::CONFIG, osc::connect, vad::VadEvent};
@@ -17,7 +17,7 @@ mod vad;
 mod whisper;
 
 extern "C" fn log_callback(
-    _level: u32,
+    _level: ::std::os::raw::c_uint,
     text: *const ::std::os::raw::c_char,
     _user_data: *mut ::std::os::raw::c_void,
 ) {
@@ -38,11 +38,15 @@ fn main() -> anyhow::Result<()> {
         .default_input_device()
         .expect("Failed to find input device");
 
+    let device_description = device.description()?;
+    println!("Device name: {}", device_description.name());
+
     let config = device
         .supported_input_configs()?
         .find(|c| c.min_sample_rate() <= 16000 && c.max_sample_rate() >= 16000)
         .ok_or_else(|| anyhow::anyhow!("No input config supporting 16000 Hz"))?
         .with_sample_rate(16000);
+
     let mut config: StreamConfig = config.into();
     config.buffer_size = cpal::BufferSize::Fixed(16 * 10);
     config.channels = 1;
@@ -56,19 +60,13 @@ fn main() -> anyhow::Result<()> {
     let stream = device.build_input_stream(
         &config,
         move |data: &[i16], _: &_| match vad.segment_parse(data).unwrap() {
-            VadEvent::Start => println!("Start recording"),
+            VadEvent::Start => {
+                println!("Start recording");
+                tx.send(VadEvent::Recording).unwrap();
+            }
             VadEvent::Pending => {}
             VadEvent::End(voice) => {
-                let voice_len = voice.len();
-                if voice_len > 16 * 10 * 30 {
-                    println!("Recording ended.",);
-                    tx.send(voice).unwrap();
-                } else {
-                    println!(
-                        "Recording ended, audio too short ({} samples), ignoring",
-                        voice_len
-                    );
-                }
+                tx.send(VadEvent::End(voice)).unwrap();
             }
             _ => {}
         },
@@ -81,15 +79,29 @@ fn main() -> anyhow::Result<()> {
     let _: JoinHandle<anyhow::Result<()>> = std::thread::spawn(move || {
         let mut whisper = whisper::Whisper::new()?;
         let mut osc = connect(("0.0.0.0", CONFIG.udp.port))?;
-        while let Ok(voice) = rx.recv() {
-            println!(
-                "Starting transcription, audio length {} samples",
-                voice.len()
-            );
-            let text = whisper.transcribe(&voice)?;
-            println!("Transcription complete: {}", text);
-            osc.send_message(&text)?;
-            str_tx.send(text)?;
+        while let Ok(event) = rx.recv() {
+            match event {
+                VadEvent::End(voice) => {
+                    let voice_len = voice.len();
+                    if voice_len > 16 * 10 * 30 {
+                        println!("Recording ended.",);
+                        let text = whisper.transcribe(&voice)?;
+                        println!("Transcription complete: {}", text);
+                        osc.send_message(&text)?;
+                        str_tx.send(text)?;
+                    } else {
+                        println!(
+                            "Recording ended, audio too short ({} samples), ignoring",
+                            voice_len
+                        );
+                    }
+                    osc.send_set_typing(false)?;
+                }
+                VadEvent::Start => {
+                    osc.send_set_typing(true)?;
+                }
+                _ => {}
+            }
         }
         Ok(())
     });

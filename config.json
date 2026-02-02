@@ -2,7 +2,7 @@
   "model_path": "./model/large-turbo-zh.bin",
   "vad": {
     "threshold_level": 0.1,
-    "debounce_times": 80
+    "debounce_times": 160
   },
   "language": "zh",
   "initial_prompt": "",

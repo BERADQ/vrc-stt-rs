@@ -88,10 +88,13 @@ impl eframe::App for VrcSttApp {
             // Current text display
             ui.horizontal(|ui| {
                 ui.label("当前:");
-                ui.label(
-                    egui::RichText::new(&self.current_text)
-                        .color(egui::Color32::from_rgb(100, 200, 100))
-                        .size(16.0),
+                ui.add(
+                    egui::widgets::Label::new(
+                        egui::RichText::new(&self.current_text)
+                            .color(egui::Color32::from_rgb(100, 200, 100))
+                            .size(16.0),
+                    )
+                    .wrap(),
                 );
             });
 
@@ -127,10 +130,13 @@ impl eframe::App for VrcSttApp {
                                 );
 
                                 // Text
-                                ui.label(
-                                    egui::RichText::new(&item.text)
-                                        .color(egui::Color32::from_rgb(200, 200, 200))
-                                        .size(14.0),
+                                ui.add(
+                                    egui::widgets::Label::new(
+                                        egui::RichText::new(&item.text)
+                                            .color(egui::Color32::from_rgb(200, 200, 200))
+                                            .size(14.0),
+                                    )
+                                    .wrap(),
                                 );
                             });
 
