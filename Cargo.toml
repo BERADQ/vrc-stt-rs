@@ -1,20 +1,12 @@
-[package]
-name = "vrc-stt-rs"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
+members = ["backend", "common", "frontend"]
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.100"
-chrono = "0.4"
-cpal = "0.17.1"
-ctrlc = "3.4"
-eframe = "0.33.3"
+common = { path = "common" }
 env_logger = "0.11.8"
 log = "0.4.29"
-rosc = "0.11.4"
 rust-i18n = { version = "3" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-webrtc-vad = "0.4.0"
-whisper-rs = { version = "0.15.1", features = ["cuda"] }
-# parking_lot = "0.12.5"

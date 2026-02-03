@@ -2,20 +2,27 @@ use std::net::{ToSocketAddrs, UdpSocket};
 
 use rosc::{encoder, OscMessage, OscPacket, OscType};
 
-use crate::config::CONFIG;
+use common::config::Config;
 
-pub fn connect(addr: impl ToSocketAddrs) -> anyhow::Result<VRCMessageOSC> {
+pub fn connect_with_config(
+    addr: impl ToSocketAddrs,
+    config: &Config,
+) -> anyhow::Result<VRCMessageOSC> {
     let socket = UdpSocket::bind(addr)?;
-    Ok(VRCMessageOSC::new(socket))
+    Ok(VRCMessageOSC::new(socket, config.udp.to.clone()))
 }
 
 pub struct VRCMessageOSC {
     socket: UdpSocket,
+    target_addr: String,
 }
 
 impl VRCMessageOSC {
-    pub fn new(stream: UdpSocket) -> Self {
-        VRCMessageOSC { socket: stream }
+    pub fn new(stream: UdpSocket, target_addr: String) -> Self {
+        VRCMessageOSC {
+            socket: stream,
+            target_addr,
+        }
     }
 
     pub fn send_message(&mut self, message: &str) -> anyhow::Result<()> {
@@ -27,7 +34,7 @@ impl VRCMessageOSC {
                 OscType::Bool(false),
             ],
         }))?;
-        self.socket.send_to(&msg_buf, &CONFIG.udp.to)?;
+        self.socket.send_to(&msg_buf, &self.target_addr)?;
         Ok(())
     }
 
@@ -36,7 +43,7 @@ impl VRCMessageOSC {
             addr: "/chatbox/typing".to_owned(),
             args: vec![OscType::Bool(is_typing)],
         }))?;
-        self.socket.send_to(&msg_buf, &CONFIG.udp.to)?;
+        self.socket.send_to(&msg_buf, &self.target_addr)?;
         Ok(())
     }
 }

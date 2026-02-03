@@ -2,39 +2,236 @@ _version: 2
 failed.find.input_device:
   en: "Failed to find input device"
   zh-CN: "找不到输入设备"
+  ja-JP: "入力デバイスが見つかりませんでした"
 device.name:
   en: "Device name: %{name}"
   zh-CN: "设备名称：%{name}"
+  ja-JP: "デバイス名: %{name}"
 no.supported.16kHz:
   en: "No input config supporting 16000 Hz"
   zh-CN: "找不到支持 16000 Hz 的输入配置"
+  ja-JP: "16000 Hz をサポートする入力設定がありません"
 error.prefix:
   en: "Error: %{error}"
   zh-CN: "错误：%{error}"
+  ja-JP: "エラー: %{error}"
 recording.start:
   en: "Recording started"
   zh-CN: "开始录音"
+  ja-JP: "録音開始"
 recording.end:
   en: "Recording ended"
   zh-CN: "录音结束"
+  ja-JP: "録音終了"
 audio.too.short:
   en: "Recording ended, audio too short (%{length} samples), ignoring"
   zh-CN: "录音结束，音频太短（%{length} 个样本），忽略"
+  ja-JP: "録音終了、音声が短すぎます（%{length} サンプル）、無視します"
 ctrlc.signal:
   en: "Received Ctrl+C signal, exiting..."
   zh-CN: "收到 Ctrl+C 信号，正在退出..."
+  ja-JP: "Ctrl+C 信号を受信しました、終了しています..."
 transcription.segment.error:
   en: "Error getting text for segment %{error:?}"
   zh-CN: "获取片段文本时出错 %{error:?}"
+  ja-JP: "セグメントのテキスト取得中にエラーが発生しました %{error:?}"
 no.transcription.result:
   en: "No transcription result"
   zh-CN: "无转录结果"
+  ja-JP: "転写結果がありません"
 config.file.open.error:
   en: "Failed to open config file"
   zh-CN: "无法打开配置文件"
+  ja-JP: "設定ファイルを開けませんでした"
 config.file.parse.error:
   en: "Failed to parse config file"
   zh-CN: "无法解析配置文件"
+  ja-JP: "設定ファイルの解析に失敗しました"
 transcription.complete:
   en: "Transcription complete: %{text}"
   zh-CN: "转录完成: %{text}"
+  ja-JP: "転写完了: %{text}"
+socket.connect.attempt:
+  en: "Attempting to connect to frontend at %{path}..."
+  zh-CN: "正在尝试连接到前端于 %{path}..."
+  ja-JP: "フロントエンド %{path} への接続を試行中..."
+socket.connected:
+  en: "Connected to frontend at %{path}"
+  zh-CN: "已连接到前端于 %{path}"
+  ja-JP: "フロントエンド %{path} に接続されました"
+socket.connection.closed:
+  en: "Connection to frontend closed"
+  zh-CN: "与前端的连接已关闭"
+  ja-JP: "フロントエンドへの接続が閉じられました"
+socket.connection.error:
+  en: "Connection error: %{error}"
+  zh-CN: "连接错误：%{error}"
+  ja-JP: "接続エラー: %{error}"
+socket.send.message.error:
+  en: "Failed to send message: %{error}"
+  zh-CN: "发送消息失败：%{error}"
+  ja-JP: "メッセージの送信に失敗しました: %{error}"
+socket.client.stopped:
+  en: "Socket client stopped"
+  zh-CN: "套接字客户端已停止"
+  ja-JP: "ソケットクライアントが停止しました"
+socket.flush.error:
+  en: "Failed to flush to frontend: %{error}"
+  zh-CN: "刷新到前端失败：%{error}"
+  ja-JP: "フロントエンドへのフラッシュに失敗しました: %{error}"
+socket.send.error:
+  en: "Failed to send to frontend: %{error}"
+  zh-CN: "发送到前端失败：%{error}"
+  ja-JP: "フロントエンドへの送信に失敗しました: %{error}"
+socket.disconnecting:
+  en: "Stop signal received, disconnecting"
+  zh-CN: "收到停止信号，正在断开连接"
+  ja-JP: "停止シグナルを受信しました、切断中"
+socket.remove.stale:
+  en: "Removing stale socket file: %{path}"
+  zh-CN: "正在删除陈旧的套接字文件：%{path}"
+  ja-JP: "古いソケットファイルを削除中: %{path}"
+socket.remove.failed:
+  en: "Failed to remove old socket file: %{error}"
+  zh-CN: "删除旧套接字文件失败：%{error}"
+  ja-JP: "古いソケットファイルの削除に失敗しました: %{error}"
+socket.server.listening:
+  en: "Unix socket server listening on %{path}"
+  zh-CN: "Unix套接字服务器正在监听 %{path}"
+  ja-JP: "Unixソケットサーバーは %{path} でリスニング中"
+socket.backend.connected:
+  en: "Backend connected"
+  zh-CN: "后端已连接"
+  ja-JP: "バックエンドが接続されました"
+socket.waiting.new.connection:
+  en: "Waiting for new backend connection..."
+  zh-CN: "正在等待新后端连接..."
+  ja-JP: "新しいバックエンド接続を待機中..."
+socket.connection.error.general:
+  en: "Socket connection error: %{error}"
+  zh-CN: "套接字连接错误：%{error}"
+  ja-JP: "ソケット接続エラー: %{error}"
+socket.server.stopped:
+  en: "Socket server stopped"
+  zh-CN: "套接字服务器已停止"
+  ja-JP: "ソケットサーバーが停止しました"
+socket.remove.file:
+  en: "Removing socket file: %{path}"
+  zh-CN: "正在删除套接字文件：%{path}"
+  ja-JP: "ソケットファイルを削除中: %{path}"
+socket.thread.join.failed:
+  en: "Failed to join listener thread"
+  zh-CN: "加入监听线程失败"
+  ja-JP: "リスナースレッドの結合に失敗しました"
+socket.stop.received:
+  en: "Stop signal received, closing connection"
+  zh-CN: "收到停止信号，正在关闭连接"
+  ja-JP: "停止シグナルを受信しました、接続を閉じています"
+socket.message.send.error:
+  en: "Failed to send message to GUI: %{error}"
+  zh-CN: "发送消息到GUI失败：%{error}"
+  ja-JP: "GUIへのメッセージ送信に失敗しました: %{error}"
+socket.message.parse.error:
+  en: "Failed to parse message: %{error}"
+  zh-CN: "解析消息失败：%{error}"
+  ja-JP: "メッセージの解析に失敗しました: %{error}"
+socket.read.graceful.exit:
+  en: "Stop signal received during read, exiting gracefully"
+  zh-CN: "读取期间收到停止信号，正在优雅退出"
+  ja-JP: "読み込み中に停止シグナルを受信しました、正常に終了しています"
+socket.read.error:
+  en: "Socket read error: %{error}"
+  zh-CN: "套接字读取错误：%{error}"
+  ja-JP: "ソケット読み取りエラー: %{error}"
+socket.handler.exited:
+  en: "Connection handler exited"
+  zh-CN: "连接处理器已退出"
+  ja-JP: "接続ハンドラが終了しました"
+socket.handler.ended:
+  en: "Connection handler ended: %{error}"
+  zh-CN: "连接处理器结束：%{error}"
+  ja-JP: "接続ハンドラが終了しました：%{error}"
+app.shutdown.start:
+  en: "Shutting down application..."
+  zh-CN: "正在关闭应用程序..."
+  ja-JP: "アプリケーションをシャットダウン中..."
+app.shutdown.complete:
+  en: "Application shutdown complete."
+  zh-CN: "应用程序关闭完成。"
+  ja-JP: "アプリケーションのシャットダウンが完了しました。"
+backend.restart.failed:
+  en: "Failed to restart backend: %{error}"
+  zh-CN: "重启后端失败：%{error}"
+  ja-JP: "バックエンドの再起動に失敗しました: %{error}"
+config.save.restart.backend.failed:
+  en: "Failed to restart backend after config save: %{error}"
+  zh-CN: "保存配置后重启后端失败：%{error}"
+  ja-JP: "設定保存後のバックエンド再起動に失敗しました: %{error}"
+config.reset.restart.backend.failed:
+  en: "Failed to restart backend after config reset: %{error}"
+  zh-CN: "重置配置后重启后端失败：%{error}"
+  ja-JP: "設定リセット後のバックエンド再起動に失敗しました: %{error}"
+socket.server.start.success:
+  en: "Socket server started successfully, waiting for backend connection..."
+  zh-CN: "套接字服务器启动成功，正在等待后端连接..."
+  ja-JP: "ソケットサーバーが正常に開始しました、バックエンド接続を待機中..."
+socket.server.start.failed:
+  en: "Failed to start socket server: %{error}"
+  zh-CN: "启动套接字服务器失败：%{error}"
+  ja-JP: "ソケットサーバーの起動に失敗しました: %{error}"
+config.load.failed:
+  en: "Failed to load config: %{error}"
+  zh-CN: "加载配置失败：%{error}"
+  ja-JP: "設定の読み込みに失敗しました: %{error}"
+backend.start.success:
+  en: "Backend started successfully"
+  zh-CN: "后端启动成功"
+  ja-JP: "バックエンドが正常に開始しました"
+backend.start.failed:
+  en: "Failed to start backend: %{error}"
+  zh-CN: "启动后端失败：%{error}"
+  ja-JP: "バックエンドの起動に失敗しました: %{error}"
+socket.broadcast.failed:
+  en: "Failed to broadcast message: %{error}"
+  zh-CN: "广播消息失败：%{error}"
+  ja-JP: "メッセージのブロードキャストに失敗しました: %{error}"
+socket.connection.retry:
+  en: "Connection attempt failed: %{error}. Retrying in %{delay_ms}ms..."
+  zh-CN: "连接尝试失败：%{error}。将在 %{delay_ms}ms 后重试..."
+  ja-JP: "接続試行に失敗しました: %{error}。%{delay_ms}ミリ秒後に再試行します..."
+whisper.init:
+  en: "Initializing Whisper... Model: %{model_path}"
+  zh-CN: "正在初始化 Whisper... 模型: %{model_path}"
+  ja-JP: "Whisper を初期化中... モデル: %{model_path}"
+backend.starting:
+  en: "Starting backend process: %{path}"
+  zh-CN: "正在启动后端进程: %{path}"
+  ja-JP: "バックエンドプロセスを開始中: %{path}"
+backend.started.pid:
+  en: "Backend process started with PID: %{pid}"
+  zh-CN: "后端进程已启动，PID: %{pid}"
+  ja-JP: "バックエンドプロセスがPID %{pid} で開始されました"
+backend.stopping.pid:
+  en: "Stopping backend process with PID: %{pid}"
+  zh-CN: "正在停止后端进程，PID: %{pid}"
+  ja-JP: "PID %{pid} のバックエンドプロセスを停止中"
+backend.kill.failed:
+  en: "Failed to kill backend process: %{error}"
+  zh-CN: "终止后端进程失败: %{error}"
+  ja-JP: "バックエンドプロセスの強制終了に失敗しました: %{error}"
+backend.exited.status:
+  en: "Backend process exited."
+  zh-CN: "后端进程已退出"
+  ja-JP: "バックエンドプロセスが終了しました"
+backend.wait.failed:
+  en: "Failed to wait for backend process: %{error}"
+  zh-CN: "等待后端进程失败: %{error}"
+  ja-JP: "バックエンドプロセスの待機に失敗しました: %{error}"
+backend.restart.process:
+  en: "Restarting backend process..."
+  zh-CN: "正在重启后端进程..."
+  ja-JP: "バックエンドプロセスを再起動中..."
+backend.restart.success:
+  en: "Backend restarted"
+  zh-CN: "后端已重启"
+  ja-JP: "バックエンドが再起動しました"

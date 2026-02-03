@@ -1,4 +1,4 @@
-use crate::config::CONFIG;
+use common::config::ConfigManager;
 
 pub struct VadWrapper {
     vad: webrtc_vad::Vad,
@@ -6,19 +6,22 @@ pub struct VadWrapper {
     threshold: i16,
     in_voice: bool,
     buffer: Vec<f32>,
+    config_manager: ConfigManager,
 }
 
 impl VadWrapper {
-    pub fn new() -> Self {
+    pub fn new(config_manager: &ConfigManager) -> Self {
+        let config = config_manager.config();
         Self {
             vad: webrtc_vad::Vad::new_with_rate_and_mode(
                 webrtc_vad::SampleRate::Rate16kHz,
                 webrtc_vad::VadMode::VeryAggressive,
             ),
-            threshold: (CONFIG.vad.threshold_level.abs() * 32767.0).round() as i16,
+            threshold: (config.vad.threshold_level.abs() * 32767.0).round() as i16,
             debounce_count: 0,
             in_voice: false,
             buffer: Vec::new(),
+            config_manager: config_manager.clone(),
         }
     }
 
@@ -37,7 +40,8 @@ impl VadWrapper {
     fn debounce(&mut self, is_voice: bool) -> bool {
         if !is_voice {
             // VAD says not voice, apply debounce
-            if self.debounce_count >= CONFIG.vad.debounce_times {
+            let config = self.config_manager.config();
+            if self.debounce_count >= config.vad.debounce_times {
                 return false;
             }
             self.debounce_count += 1;

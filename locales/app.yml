@@ -1,13 +1,153 @@
 _version: 2
-current.prefix:
-  en: "Current:"
-  zh-CN: "当前："
 history.records:
   en: "History Records"
   zh-CN: "历史记录"
+  ja-JP: "履歴レコード"
 no.history.records:
   en: "No history records"
   zh-CN: "暂无历史记录"
+  ja-JP: "履歴はありません"
 history.count:
   en: "History: %{count}/%{max}"
   zh-CN: "历史记录: %{count}/%{max}"
+  ja-JP: "履歴: %{count}/%{max}"
+backend.disconnected:
+  en: "Backend disconnected"
+  zh-CN: "后端连接断开"
+  ja-JP: "バックエンドが切断されました"
+status.idle:
+  en: "● Idle"
+  zh-CN: "● 等待中"
+  ja-JP: "● 待機中"
+status.recording:
+  en: "● Recording"
+  zh-CN: "● 录音中"
+  ja-JP: "● 録音中"
+status.processing:
+  en: "● Processing"
+  zh-CN: "● 处理中"
+  ja-JP: "● 処理中"
+status.error:
+  en: "● Error"
+  zh-CN: "● 错误"
+  ja-JP: "● エラー"
+settings.title:
+  en: "Settings"
+  zh-CN: "设置"
+  ja-JP: "設定"
+settings.model:
+  en: "Model Settings"
+  zh-CN: "模型设置"
+  ja-JP: "モデル設定"
+settings.model.path:
+  en: "Model Path:"
+  zh-CN: "模型路径:"
+  ja-JP: "モデルパス:"
+settings.language:
+  en: "Language:"
+  zh-CN: "语言:"
+  ja-JP: "言語:"
+settings.initial.prompt:
+  en: "Initial Prompt:"
+  zh-CN: "初始提示:"
+  ja-JP: "初期プロンプト:"
+settings.vad:
+  en: "Voice Detection Settings"
+  zh-CN: "语音检测设置"
+  ja-JP: "音声検出設定"
+settings.vad.threshold:
+  en: "Threshold:"
+  zh-CN: "阈值:"
+  ja-JP: "しきい値:"
+settings.vad.debounce:
+  en: "Debounce Times:"
+  zh-CN: "防抖次数:"
+  ja-JP: "デバウンスタイム:"
+settings.network:
+  en: "Network Settings"
+  zh-CN: "网络设置"
+  ja-JP: "ネットワーク設定"
+settings.socket.path:
+  en: "Socket Path:"
+  zh-CN: "Socket 路径:"
+  ja-JP: "ソケットパス:"
+settings.udp.port:
+  en: "UDP Port:"
+  zh-CN: "UDP 端口:"
+  ja-JP: "UDPポート:"
+settings.udp.target:
+  en: "UDP Target:"
+  zh-CN: "UDP 目标:"
+  ja-JP: "UDPターゲット:"
+settings.save:
+  en: "Save Config"
+  zh-CN: "保存配置"
+  ja-JP: "設定を保存"
+settings.reset:
+  en: "Reset"
+  zh-CN: "重置"
+  ja-JP: "リセット"
+settings.interface.lang:
+  en: "Interface Language"
+  zh-CN: "界面语言"
+  ja-JP: "インターフェース言語"
+settings.interface.lang.note:
+  en: "Note: If some parts of the interface didn't update, restart the application"
+  zh-CN: "注意：如果界面部分文字未成功更改则可能需要重启应用程序"
+  ja-JP: "注意: インターフェースの一部が更新されない場合はアプリケーションを再起動してください"
+navigation.settings:
+  en: "⚙ Settings"
+  zh-CN: "⚙ 设置"
+  ja-JP: "⚙ 設定"
+navigation.back:
+  en: "← Back"
+  zh-CN: "← 返回"
+  ja-JP: "← 戻る"
+reconnect.button:
+  en: "Reconnect"
+  zh-CN: "重新连接"
+  ja-JP: "再接続"
+restart.backend.button:
+  en: "Restart Backend"
+  zh-CN: "重启后端"
+  ja-JP: "バックエンドを再起動"
+logs.tab.label:
+  en: "Logs"
+  zh-CN: "日志"
+  ja-JP: "ログ"
+backend.connected.log:
+  en: "Backend connected"
+  zh-CN: "后端已连接"
+  ja-JP: "バックエンドが接続されました"
+backend.logs.label:
+  en: "Backend Logs"
+  zh-CN: "后端日志"
+  ja-JP: "バックエンドログ"
+clear.logs.button:
+  en: "Clear Logs"
+  zh-CN: "清除日志"
+  ja-JP: "ログをクリア"
+log.entries.count:
+  en: "Log entries: %{count}"
+  zh-CN: "日志条目: %{count}"
+  ja-JP: "ログエントリ: %{count}"
+no.backend.logs:
+  en: "No backend logs available"
+  zh-CN: "暂无后端日志"
+  ja-JP: "利用可能なバックエンドログはありません"
+log.type.app.info:
+  en: "APP_INFO"
+  zh-CN: "应用信息"
+  ja-JP: "アプリ情報"
+log.type.app.error:
+  en: "APP_ERR"
+  zh-CN: "应用错误"
+  ja-JP: "アプリエラー"
+log.type.stdout:
+  en: "STDOUT"
+  zh-CN: "标准输出"
+  ja-JP: "標準出力"
+log.type.stderr:
+  en: "STDERR"
+  zh-CN: "标准错误"
+  ja-JP: "標準エラー"
