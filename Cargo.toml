@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["backend", "common", "frontend"]
+members = ["backend", "frontend"]
+default-members = ["backend", "frontend"]
 
 [workspace.dependencies]
 anyhow = "1.0.100"
