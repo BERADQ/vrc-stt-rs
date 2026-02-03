@@ -1,5 +1,8 @@
 use std::io::{BufRead, BufReader, Write};
+#[cfg(target_os = "linux")]
 use std::os::unix::net::{UnixListener, UnixStream};
+#[cfg(target_os = "windows")]
+use uds_windows::{UnixListener, UnixStream};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;

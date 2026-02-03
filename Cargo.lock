@@ -513,6 +513,7 @@ dependencies = [
  "rust-i18n",
  "serde",
  "serde_json",
+ "uds_windows",
  "webrtc-vad",
  "whisper-rs",
 ]
@@ -1471,6 +1472,7 @@ dependencies = [
  "rust-i18n",
  "serde",
  "serde_json",
+ "uds_windows",
 ]
 
 [[package]]
