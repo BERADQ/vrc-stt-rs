@@ -20,28 +20,17 @@
 - **内存**：最低 4GB，建议 8GB+（用于较大的 Whisper 模型）
 - **存储空间**：约 1-2GB 用于 Whisper 模型文件
 
-## 构建与安装
+## 安装
 
-### 1. 克隆仓库
-```bash
-git clone https://github.com/BERADQ/vrc-stt-rs.git
-cd vrc-stt-rs
-```
-
-### 2. 构建
-```bash
-cargo build --release
-```
-
-#### 3.1 或下载预构建二进制文件
+#### 下载预构建二进制文件
 从 [GitHub Releases](https://github.com/BERADQ/vrc-stt-rs/releases) 下载预构建二进制文件，并将其放置在任何目录中。
 
-### 3. 下载 Whisper 模型
+### 下载 Whisper 模型
 从 [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp) 或其他来源下载 Whisper 模型文件，并将其放置在 `model/` 目录中：
 
 ```bash
 # 示例：下载中等模型（推荐，平衡速度与准确性）
-wget -P model/ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O model/medium.bin
+wget https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O model/medium.bin
 ```
 
 可用模型（大小/性能权衡）：
@@ -51,33 +40,7 @@ wget -P model/ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-me
 - `medium.bin` - 推荐，准确性良好
 - `large.bin` - 最佳准确性，最慢
 
-## 配置
 
-编辑 `config.json` 以自定义行为：
-
-```json
-{
-  // Whisper 模型文件路径
-  "model_path": "./model/medium.bin",
-  // 语音活动检测（VAD）设置
-  "vad": {
-    "threshold_level": 0.05,
-    "debounce_times": 32
-  },
-  // 更改转录语言代码
-  "language": "zh",
-  // Whisper 的初始提示
-  "initial_prompt": "使用简体中文输出",
-  "udp": {
-    "port": 5005,
-    // 发送到 VRChat 的 OSC 地址
-    "to": "127.0.0.1:9000"
-  }
-}
-```
-
-### 环境变量
-- `CONFIG_PATH`：覆盖默认配置文件位置
 
 ## 使用说明
 
@@ -87,43 +50,27 @@ wget -P model/ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-me
 2. 记下 OSC 端口（默认：`9000`）
 
 ### 2. 运行应用程序
+开发时，首先构建后端，然后运行前端：
 ```bash
-# 开发模式（带调试）
-cargo run
+# 构建后端
+cargo build --bin backend
 
-# 发布模式（优化）
-cargo run --release
-
-# 使用自定义配置文件路径
-CONFIG_PATH=./myconfig.json cargo run --release
+# 运行前端并引用后端
+VRC_STT_BACKEND=./target/debug/backend cargo run --bin frontend
 ```
 
 #### 2.1 运行预构建二进制文件
 ```bash
-# 使用默认配置文件路径
 ./vrc-stt-rs
-
-# 使用自定义配置文件路径
-CONFIG_PATH=./myconfig.json ./vrc-stt-rs
 ```
 
 ### 3. 使用软件
-运行后，软件将：
-1. 监控麦克风是否有语音
-2. 显示开始/停止录音的消息
-3. 转录语音并发送到 VRChat
-4. 将转录结果打印到控制台
-
-示例输出：
-```
-Start recording
-Recording ended, audio length 5120 samples, transcribing...
-Starting transcription, audio length 5120 samples
-Transcription complete: Hello VRChat!
-```
-
-### 4. 停止应用程序
-按 `Ctrl+C` 停止应用程序。
+运行后，GUI 将显示：
+1. **状态面板**：显示当前状态（空闲、录音、处理、错误）及颜色指示器
+2. **历史记录标签页**：显示带时间戳的转录文本
+3. **设置标签页**：允许配置模型、语言、VAD 和网络设置
+4. **日志标签页**：显示后端输出和错误消息
+5. **导航**：使用顶部导航按钮切换面板
 
 ## 故障排除
 
@@ -150,36 +97,9 @@ Transcription complete: Hello VRChat!
 - 调高 VAD debounce_times 值
 
 ### 调试
-通过开发模式启用详细日志：
-```bash
-RUST_LOG=debug cargo run
-```
-
-检查音频设备配置：
-```bash
-# 列出音频设备
-cargo run --features=cpal/debug
-```
-
-## 性能调优
-
-### 提高准确性
-- 使用较大的 Whisper 模型（medium/large）
-- 降低 VAD threshold_level（例如 0.02）
-- 增加 debounce_times（例如 64）
-
-### 降低延迟
-- 使用较小的 Whisper 模型（tiny/base）
-- 提高 VAD threshold_level（例如 0.1）
-- 减少 debounce_times（例如 16）
+在 GUI 的日志标签页中查看后端输出和错误消息。
 
 ## 开发
-
-### 从源代码构建
-```bash
-# 调试构建
-cargo build
-```
 
 ### 添加功能
 1. 在 `config.rs` 和 `config.json` 中添加新的配置选项
@@ -189,16 +109,7 @@ cargo build
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 有关详细信息，请参阅 LICENSE 文件。
-
-## 致谢
-
-- [OpenAI Whisper](https://github.com/openai/whisper) 提供语音识别模型
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) 提供 C++ 实现
-- [whisper-rs](https://github.com/tazz4843/whisper-rs) 提供 Rust 绑定
-- [WebRTC VAD](https://github.com/daily-co/webrtc-vad) 提供语音活动检测
-- [rosc](https://github.com/keschwa/rosc) 提供 OSC 实现
-- [cpal](https://github.com/RustAudio/cpal) 提供跨平台音频 I/O
+本项目采用 GNU 通用公共许可证 v3.0 (GPL-3.0) - 有关详细信息，请参阅 LICENSE 文件。
 
 ## 支持
 
@@ -213,7 +124,7 @@ cargo build
 
 ## 路线图
 
-- [ ] 多麦克风支持
+- [ ] 可选麦克风配置
 - [ ] 自定义热键用于手动控制
 
 ---

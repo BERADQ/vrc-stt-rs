@@ -21,28 +21,17 @@ A minimal, high-performance Speech-to-Text (STT) software for VRChat, written in
 - **RAM**: Minimum 4GB, 8GB+ recommended for larger Whisper models
 - **Storage**: ~1-2GB for Whisper model files
 
-## Build & Installation
+## Installation
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/BERADQ/vrc-stt-rs.git
-cd vrc-stt-rs
-```
-
-### 2. Build
-```bash
-cargo build --release
-```
-
-#### 3.1 Or Download Pre-built Binaries
+#### Download Pre-built Binaries
 Download pre-built binaries from [GitHub Releases](https://github.com/BERADQ/vrc-stt-rs/releases) and place it in any directory.
 
-### 3. Download Whisper Models
+### Download Whisper Models
 Download Whisper model files from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp) or other sources and place them in the `model/` directory:
 
 ```bash
 # Example: Download medium model (recommended for balance of speed/accuracy)
-wget -P model/ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O model/medium.bin
+wget https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O model/medium.bin
 ```
 
 Available models (size/performance trade-off):
@@ -52,33 +41,7 @@ Available models (size/performance trade-off):
 - `medium.bin` - Recommended for good accuracy
 - `large.bin` - Best accuracy, slowest
 
-## Configuration
 
-Edit `config.json` to customize the behavior:
-
-```json
-{
-  // Path to Whisper model file
-  "model_path": "./model/medium.bin",
-  // Voice Activity Detection (VAD) settings
-  "vad": {
-    "threshold_level": 0.05,
-    "debounce_times": 32
-  },
-  // Change language code for transcription
-  "language": "zh",
-  // Initial prompt for Whisper
-  "initial_prompt": "使用简体中文输出",
-  "udp": {
-    "port": 5005,
-    // TO VRChat OSC address
-    "to": "127.0.0.1:9000"
-  }
-}
-```
-
-### Environment Variables
-- `CONFIG_PATH`: Override the default config file location
 
 ## Usage
 
@@ -88,45 +51,27 @@ Make sure VRChat is running with OSC enabled:
 2. Note the OSC port (default: `9000`)
 
 ### 2. Run the Application
+For development, first build the backend then run the frontend:
 ```bash
-# Development mode (with debugging)
-cargo run
+# Build the backend
+cargo build --bin backend
 
-# Release mode (optimized)
-cargo run --release
-
-# With custom config path
-CONFIG_PATH=./myconfig.json cargo run --release
+# Run the frontend with backend reference
+VRC_STT_BACKEND=./target/debug/backend cargo run --bin frontend
 ```
 
 #### 2.1 Run Pre-built Binary
 ```bash
-# With default config path
 ./vrc-stt-rs
-
-# With custom config path
-CONFIG_PATH=./myconfig.json ./vrc-stt-rs
 ```
 
 ### 3. Using the Software
-Once running, the software will:
-1. Monitor your microphone for speech
-2. Display messages when recording starts/stops
-3. Transcribe speech and send to VRChat
-4. Print transcriptions to console
-
-Example output:
-```
-Start recording
-Recording ended, audio length 5120 samples, transcribing...
-Starting transcription, audio length 5120 samples
-Transcription complete: Hello VRChat!
-```
-
-### 4. Stopping the Application
-Press `Ctrl+C` to stop the application.
-
-## How It Works
+Once running, the GUI will display:
+1. **Status Panel**: Shows current state (Idle, Recording, Processing, Error) with color indicators
+2. **History Tab**: Displays transcribed text with timestamps
+3. **Settings Tab**: Allows configuration of model, language, VAD, and network settings
+4. **Logs Tab**: Shows backend output and error messages
+5. **Navigation**: Switch between panels using the top navigation buttons
 
 ## Troubleshooting
 
@@ -153,36 +98,9 @@ Press `Ctrl+C` to stop the application.
 - Adjust VAD debounce_times higher
 
 ### Debugging
-Enable verbose logging by running in development mode:
-```bash
-RUST_LOG=debug cargo run
-```
-
-Check audio device configuration:
-```bash
-# List audio devices
-cargo run --features=cpal/debug
-```
-
-## Performance Tuning
-
-### For Better Accuracy
-- Use larger Whisper model (medium/large)
-- Lower VAD threshold_level (e.g., 0.02)
-- Increase debounce_times (e.g., 64)
-
-### For Lower Latency
-- Use smaller Whisper model (tiny/base)
-- Higher VAD threshold_level (e.g., 0.1)
-- Decrease debounce_times (e.g., 16)
+Check logs in the Logs tab of the GUI for backend output and error messages.
 
 ## Development
-
-### Building from Source
-```bash
-# Debug build
-cargo build
-```
 
 ### Adding Features
 1. Add new config options to `config.rs` and `config.json`
@@ -192,16 +110,7 @@ cargo build
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- [OpenAI Whisper](https://github.com/openai/whisper) for the speech recognition model
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the C++ implementation
-- [whisper-rs](https://github.com/tazz4843/whisper-rs) for Rust bindings
-- [WebRTC VAD](https://github.com/daily-co/webrtc-vad) for voice activity detection
-- [rosc](https://github.com/keschwa/rosc) for OSC implementation
-- [cpal](https://github.com/RustAudio/cpal) for cross-platform audio I/O
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the LICENSE file for details.
 
 ## Support
 
@@ -216,7 +125,7 @@ If you encounter issues:
 
 ## Roadmap
 
-- [ ] Multiple microphone support
+- [ ] Optional microphone configuration
 - [ ] Custom hotkeys for manual control
 
 ---
