@@ -90,7 +90,10 @@ fn handle_voice_end(
     if voice.len() < MIN_VOICE_SAMPLES {
         let error_msg = t!("audio.too.short", length = voice.len());
         log::warn!("{}", error_msg);
-        send_socket(socket, SocketMessage::STTRecordEndWithError(error_msg.to_string()));
+        send_socket(
+            socket,
+            SocketMessage::STTRecordEndWithError(error_msg.to_string()),
+        );
         osc.set_typing(false)?;
         return Ok(());
     }
@@ -124,8 +127,9 @@ fn send_socket(socket: &SocketClient, msg: SocketMessage) {
 }
 
 /// Whisper logging callback
-extern "C" fn whisper_log_callback(
-    _level: u32,
+/// On linux _level is a u32, on windows it's a i32
+extern "C" fn whisper_log_callback<T>(
+    _level: T,
     text: *const std::os::raw::c_char,
     _user_data: *mut std::os::raw::c_void,
 ) {
