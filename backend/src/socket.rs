@@ -51,7 +51,10 @@ impl SocketClient {
                     break;
                 }
 
-                log::info!("{}", t!("socket.connect.attempt", path = socket_path.display()));
+                log::info!(
+                    "{}",
+                    t!("socket.connect.attempt", path = socket_path.display())
+                );
 
                 match UnixStream::connect(&socket_path) {
                     Ok(stream) => {
@@ -115,7 +118,7 @@ impl SocketClient {
     }
 
     /// Send message to frontend
-    /// 
+    ///
     /// Silently drops the message if not connected (no error spam)
     pub fn send(&self, message: &SocketMessage) -> anyhow::Result<()> {
         let mut conn = self.connection.lock().unwrap();
@@ -140,10 +143,7 @@ impl SocketClient {
     }
 
     /// Handle a connection - read incoming messages
-    fn handle_connection(
-        stream: &UnixStream,
-        stop_signal: Arc<AtomicBool>,
-    ) -> anyhow::Result<()> {
+    fn handle_connection(stream: &UnixStream, stop_signal: Arc<AtomicBool>) -> anyhow::Result<()> {
         stream.set_read_timeout(Some(Duration::from_millis(100)))?;
 
         let reader = BufReader::new(stream);

@@ -1,8 +1,8 @@
 use chrono::{DateTime, Local};
-use common::{config, Config, ConfigManager};
+use common::{Config, ConfigManager, config};
 use eframe::egui::{self, Color32, Context, RichText, Ui};
 use rust_i18n::t;
-use std::sync::{mpsc, Arc};
+use std::sync::{Arc, mpsc};
 
 use crate::backend_manager::BackendManager;
 use crate::constants;
@@ -571,6 +571,45 @@ impl VrcSttApp {
                     ui.horizontal(|ui| {
                         ui.label(t!("settings.udp.target"));
                         ui.add(egui::TextEdit::singleline(&mut config.udp.to).desired_width(200.0));
+                    });
+                });
+
+                ui.add_space(8.0);
+
+                // Audio settings
+                ui.collapsing(t!("settings.audio"), |ui| {
+                    let config = &mut self.config_manager.config_mut();
+                    ui.horizontal(|ui| {
+                        ui.label(t!("settings.audio.channel_mix_mode"));
+                        egui::ComboBox::from_id_salt("channel_mix_mode")
+                            .selected_text(match config.audio.channel_mix_mode {
+                                common::ChannelMixMode::MixToMono => {
+                                    t!("settings.audio.mix_to_mono")
+                                }
+                                common::ChannelMixMode::FirstChannel => {
+                                    t!("settings.audio.first_channel")
+                                }
+                                common::ChannelMixMode::SecondChannel => {
+                                    t!("settings.audio.second_channel")
+                                }
+                            })
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(
+                                    &mut config.audio.channel_mix_mode,
+                                    common::ChannelMixMode::MixToMono,
+                                    t!("settings.audio.mix_to_mono"),
+                                );
+                                ui.selectable_value(
+                                    &mut config.audio.channel_mix_mode,
+                                    common::ChannelMixMode::FirstChannel,
+                                    t!("settings.audio.first_channel"),
+                                );
+                                ui.selectable_value(
+                                    &mut config.audio.channel_mix_mode,
+                                    common::ChannelMixMode::SecondChannel,
+                                    t!("settings.audio.second_channel"),
+                                );
+                            });
                     });
                 });
 

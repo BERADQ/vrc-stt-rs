@@ -42,7 +42,9 @@ fn main() -> anyhow::Result<()> {
     rust_i18n::set_locale(&config_manager.config().interface_language);
 
     // Initialize components
-    let audio = AudioCapture::new()?;
+    let mix_mode = config_manager.config().audio.channel_mix_mode.clone();
+    log::info!("Audio channel mix mode: {}", mix_mode.as_str());
+    let audio = AudioCapture::new(mix_mode)?;
     let vad = VadWrapper::new(&config_manager);
     let mut whisper = Whisper::new(&config_manager)?;
     let mut osc = VrcOsc::from_config(config_manager.config())?;

@@ -45,17 +45,13 @@ impl AudioConfig {
             .collect();
 
         // Try to find best configuration (prefer 16kHz mono)
-        let (config, sample_rate, channels) =
-            find_best_stream_config(&supported_configs)?;
+        let (config, sample_rate, channels) = find_best_stream_config(&supported_configs)?;
 
         let needs_channel_mix = channels > 1;
         let needs_resampling = sample_rate != TARGET_SAMPLE_RATE;
 
         if needs_channel_mix {
-            log::info!(
-                "Device using {} channels, will mix to mono",
-                channels
-            );
+            log::info!("Device using {} channels, will mix to mono", channels);
         }
 
         Ok(Self {
@@ -102,26 +98,24 @@ fn find_best_stream_config(
     // Try 16kHz first, preferring mono
     if let Some(config) = find_config_at_rate(configs, TARGET_SAMPLE_RATE) {
         log::info!("{}", t!("found.16kHz.support"));
-        let channels = config.channels();
-        let channels_to_use = if channels == 1 { 1 } else { channels };
-        return Ok((config.with_sample_rate(TARGET_SAMPLE_RATE), TARGET_SAMPLE_RATE, channels_to_use));
+        return Ok((
+            config.with_sample_rate(TARGET_SAMPLE_RATE),
+            TARGET_SAMPLE_RATE,
+            config.channels(),
+        ));
     }
 
     // Try 24kHz
     if let Some(config) = find_config_at_rate(configs, 24000) {
         log::info!("{}", t!("fallback.24kHz.using"));
-        let channels = config.channels();
-        let channels_to_use = if channels == 1 { 1 } else { channels };
-        return Ok((config.with_sample_rate(24000), 24000, channels_to_use));
+        return Ok((config.with_sample_rate(24000), 24000, config.channels()));
     }
 
     // Try other common rates
     for &rate in &[48000u32, 44100, 32000, 22050] {
         if let Some(config) = find_config_at_rate(configs, rate) {
             log::info!("{}", t!("fallback.other_rate.using", rate = rate));
-            let channels = config.channels();
-            let channels_to_use = if channels == 1 { 1 } else { channels };
-            return Ok((config.with_sample_rate(rate), rate, channels_to_use));
+            return Ok((config.with_sample_rate(rate), rate, config.channels()));
         }
     }
 

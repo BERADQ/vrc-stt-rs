@@ -38,11 +38,8 @@ impl VadWrapper {
         // Check VAD
         let mut data_i16 = [0i16; 160];
         f32_to_i16_samples(data, &mut data_i16);
-        
-        let is_voice_vad = self
-            .vad
-            .is_voice_segment(&data_i16)
-            .unwrap_or(false);
+
+        let is_voice_vad = self.vad.is_voice_segment(&data_i16).unwrap_or(false);
 
         // Check amplitude threshold
         let exceeds_threshold = data.iter().any(|&s| s.abs() > self.threshold);

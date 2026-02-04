@@ -79,6 +79,26 @@ settings.udp.target:
   en: "UDP Target:"
   zh-CN: "UDP 目标:"
   ja-JP: "UDPターゲット:"
+settings.audio:
+  en: "Audio Settings"
+  zh-CN: "音频设置"
+  ja-JP: "オーディオ設定"
+settings.audio.channel_mix_mode:
+  en: "Channel Mix Mode:"
+  zh-CN: "声道混合模式:"
+  ja-JP: "チャンネルミックスモード:"
+settings.audio.mix_to_mono:
+  en: "Mix to Mono (Recommended)"
+  zh-CN: "混音为单声道 (推荐)"
+  ja-JP: "モノラルにミックス (推奨)"
+settings.audio.first_channel:
+  en: "First Channel Only"
+  zh-CN: "仅使用第一声道"
+  ja-JP: "最初のチャンネルのみ"
+settings.audio.second_channel:
+  en: "Second Channel Only"
+  zh-CN: "仅使用第二声道"
+  ja-JP: "2番目のチャンネルのみ"
 settings.save:
   en: "Save Config"
   zh-CN: "保存配置"

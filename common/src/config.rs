@@ -3,6 +3,44 @@ use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
 
+/// Audio channel mixing mode
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ChannelMixMode {
+    /// Mix all channels to mono using energy-preserving algorithm
+    #[default]
+    MixToMono,
+    /// Use only the first (left) channel
+    FirstChannel,
+    /// Use only the second (right) channel
+    SecondChannel,
+}
+
+impl ChannelMixMode {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ChannelMixMode::MixToMono => "mix_to_mono",
+            ChannelMixMode::FirstChannel => "first_channel",
+            ChannelMixMode::SecondChannel => "second_channel",
+        }
+    }
+}
+
+/// Audio configuration
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AudioConfig {
+    /// Channel mixing mode for multi-channel input devices
+    pub channel_mix_mode: ChannelMixMode,
+}
+
+impl Default for AudioConfig {
+    fn default() -> Self {
+        Self {
+            channel_mix_mode: ChannelMixMode::MixToMono,
+        }
+    }
+}
+
 /// Application configuration
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -12,6 +50,7 @@ pub struct Config {
     pub udp: UdpConfig,
     pub initial_prompt: Option<String>,
     pub interface_language: String,
+    pub audio: AudioConfig,
 }
 
 impl Default for Config {
@@ -23,6 +62,7 @@ impl Default for Config {
             udp: UdpConfig::default(),
             initial_prompt: None,
             interface_language: "en".to_owned(),
+            audio: AudioConfig::default(),
         }
     }
 }

@@ -40,7 +40,7 @@ pub fn default_socket_path() -> std::path::PathBuf {
 
 /// Configuration types
 pub mod config;
-pub use config::{Config, ConfigManager, UdpConfig, VadConfig};
+pub use config::{AudioConfig, ChannelMixMode, Config, ConfigManager, UdpConfig, VadConfig};
 
 pub mod lang;
 pub use lang::ALL_LANG;

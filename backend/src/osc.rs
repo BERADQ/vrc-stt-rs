@@ -19,7 +19,7 @@ impl VrcOsc {
     pub fn from_config(config: &Config) -> anyhow::Result<Self> {
         let bind_addr: (&str, u16) = ("0.0.0.0", config.udp.port);
         let socket = UdpSocket::bind(bind_addr)?;
-        
+
         Ok(Self {
             socket,
             target_addr: config.udp.to.clone(),

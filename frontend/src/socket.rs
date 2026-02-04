@@ -75,7 +75,10 @@ impl SocketServer {
                 }
                 Err(_) => {
                     // Socket is not active, safe to delete
-                    log::info!("{}", t!("socket.remove.stale", path = self.socket_path.display()));
+                    log::info!(
+                        "{}",
+                        t!("socket.remove.stale", path = self.socket_path.display())
+                    );
                     if let Err(e) = std::fs::remove_file(&self.socket_path) {
                         log::warn!("{}", t!("socket.remove.failed", error = e));
                     }
@@ -84,7 +87,10 @@ impl SocketServer {
         }
 
         let listener = UnixListener::bind(&self.socket_path)?;
-        log::info!("{}", t!("socket.server.listening", path = self.socket_path.display()));
+        log::info!(
+            "{}",
+            t!("socket.server.listening", path = self.socket_path.display())
+        );
 
         let msg_tx = self.msg_tx.clone();
         let stop_signal = self.stop_signal.clone();
@@ -137,7 +143,10 @@ impl SocketServer {
 
             // Clean up socket file
             if socket_path_clone.exists() {
-                log::info!("{}", t!("socket.remove.file", path = socket_path_clone.display()));
+                log::info!(
+                    "{}",
+                    t!("socket.remove.file", path = socket_path_clone.display())
+                );
                 if let Err(e) = std::fs::remove_file(&socket_path_clone) {
                     log::warn!("{}", t!("socket.remove.failed", error = e));
                 }
@@ -164,7 +173,10 @@ impl SocketServer {
 
         // Clean up socket file
         if std::path::Path::new(&self.socket_path).exists() {
-            log::info!("{}", t!("socket.remove.file", path = self.socket_path.display()));
+            log::info!(
+                "{}",
+                t!("socket.remove.file", path = self.socket_path.display())
+            );
             if let Err(e) = std::fs::remove_file(&self.socket_path) {
                 log::warn!("{}", t!("socket.remove.failed", error = e));
             }
