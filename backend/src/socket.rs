@@ -1,9 +1,13 @@
+//! Unix socket communication with frontend
+//!
+//! Provides a client that connects to the frontend's Unix socket server
+//! for bi-directional communication.
+
 use std::io::{BufRead, BufReader, Write};
 #[cfg(target_os = "linux")]
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
@@ -13,7 +17,7 @@ use uds_windows::UnixStream;
 use common::SocketMessage;
 use rust_i18n::t;
 
-/// Unix socket client that connects to the frontend with automatic reconnection
+/// Unix socket client with automatic reconnection
 pub struct SocketClient {
     socket_path: PathBuf,
     connection: Arc<Mutex<Option<UnixStream>>>,
@@ -54,7 +58,9 @@ impl SocketClient {
                         log::info!("{}", t!("socket.connected", path = socket_path.display()));
 
                         // Store connection
-                        *connection.lock().unwrap() = Some(stream.try_clone().unwrap());
+                        if let Ok(mut conn) = connection.lock() {
+                            *conn = stream.try_clone().ok();
+                        }
 
                         // Handle connection
                         match Self::handle_connection(&stream, stop_signal.clone()) {
@@ -67,7 +73,9 @@ impl SocketClient {
                         }
 
                         // Clear connection
-                        *connection.lock().unwrap() = None;
+                        if let Ok(mut conn) = connection.lock() {
+                            *conn = None;
+                        }
                         delay = Duration::from_millis(500);
                     }
                     Err(e) => {
@@ -86,10 +94,10 @@ impl SocketClient {
                     break;
                 }
 
-                // Exponential backoff
+                // Exponential backoff with interrupt check
                 let start = std::time::Instant::now();
                 while start.elapsed() < delay && !stop_signal.load(Ordering::SeqCst) {
-                    std::thread::sleep(Duration::from_millis(50));
+                    thread::sleep(Duration::from_millis(50));
                 }
 
                 if stop_signal.load(Ordering::SeqCst) {
@@ -106,7 +114,9 @@ impl SocketClient {
         Ok(())
     }
 
-    /// Send message to frontend - returns Ok(()) if not connected (message is dropped)
+    /// Send message to frontend
+    /// 
+    /// Silently drops the message if not connected (no error spam)
     pub fn send(&self, message: &SocketMessage) -> anyhow::Result<()> {
         let mut conn = self.connection.lock().unwrap();
 
@@ -116,28 +126,28 @@ impl SocketClient {
                 Ok(_) => {
                     if let Err(e) = stream.flush() {
                         log::debug!("{}", t!("socket.flush.error", error = e));
-                        // Connection might be broken, clear it
                         *conn = None;
                     }
                 }
                 Err(e) => {
                     log::debug!("{}", t!("socket.send.error", error = e));
-                    // Connection is broken, clear it
                     *conn = None;
                 }
             }
         }
-        // If not connected, message is silently dropped - this is expected behavior
+        // If not connected, message is silently dropped
         Ok(())
     }
 
-    /// Handle a connection - read responses (currently just keeps connection alive)
-    fn handle_connection(stream: &UnixStream, stop_signal: Arc<AtomicBool>) -> anyhow::Result<()> {
+    /// Handle a connection - read incoming messages
+    fn handle_connection(
+        stream: &UnixStream,
+        stop_signal: Arc<AtomicBool>,
+    ) -> anyhow::Result<()> {
         stream.set_read_timeout(Some(Duration::from_millis(100)))?;
 
         let reader = BufReader::new(stream);
 
-        // Read incoming messages (frontend might send commands in the future)
         for line in reader.lines() {
             if stop_signal.load(Ordering::SeqCst) {
                 log::info!("{}", t!("socket.disconnecting"));
@@ -146,7 +156,8 @@ impl SocketClient {
 
             match line {
                 Ok(_json) => {
-                    // Currently frontend doesn't send messages, but we could handle them here
+                    // Currently frontend doesn't send commands
+                    // Commands can be handled here in the future
                 }
                 Err(e) => {
                     if stop_signal.load(Ordering::SeqCst) {
@@ -166,46 +177,22 @@ impl SocketClient {
     }
 }
 
-/// Legacy wrapper for backward compatibility with old code
-pub struct SocketServer {
-    client: SocketClient,
+impl Drop for SocketClient {
+    fn drop(&mut self) {
+        self.stop_signal.store(true, Ordering::SeqCst);
+        if let Some(handle) = self.connection_handle.take() {
+            let _ = handle.join();
+        }
+    }
 }
 
-impl SocketServer {
-    /// Create a new socket "server" (now a client that connects to frontend)
-    pub fn new() -> anyhow::Result<(Self, Receiver<SocketMessage>)> {
-        let socket_path = std::env::var("VRC_STT_SOCKET")
-            .map(|s| PathBuf::from(s))
-            .unwrap_or_else(|_| common::default_socket_path());
+/// Create socket client with default path
+pub fn create_default_client() -> anyhow::Result<SocketClient> {
+    let socket_path = std::env::var("VRC_STT_SOCKET")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| common::default_socket_path());
 
-        let mut client = SocketClient::new(socket_path);
-
-        // Start the client immediately
-        client.start()?;
-
-        // Create a dummy receiver for compatibility (old API expected this)
-        let (_, broadcast_rx) = channel::<SocketMessage>();
-
-        let server = Self { client };
-        Ok((server, broadcast_rx))
-    }
-
-    /// Start method for compatibility (does nothing, client already started)
-    pub fn start(&self) -> anyhow::Result<JoinHandle<()>> {
-        // Client is already started in new(), return a dummy handle
-        let handle = thread::spawn(|| {});
-        Ok(handle)
-    }
-
-    /// Send message to frontend - renamed from broadcast for clarity
-    /// Silently drops message if not connected (no error spam)
-    pub fn broadcast(&self, message: SocketMessage) -> anyhow::Result<()> {
-        self.client.send(&message)?;
-        Ok(())
-    }
-
-    /// Run broadcaster - kept for compatibility but not needed
-    pub fn run_broadcaster(&self, _rx: Receiver<SocketMessage>) -> JoinHandle<()> {
-        thread::spawn(|| {})
-    }
+    let mut client = SocketClient::new(socket_path);
+    client.start()?;
+    Ok(client)
 }
