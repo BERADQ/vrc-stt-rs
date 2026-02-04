@@ -67,11 +67,38 @@ impl Default for Config {
     }
 }
 
+/// VAD (Voice Activity Detection) mode
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum VadMode {
+    /// Normal mode
+    #[default]
+    Quality,
+    /// Low bitrate mode
+    LowBitrate,
+    /// Aggressive mode
+    Aggressive,
+    /// Very aggressive mode
+    VeryAggressive,
+}
+
+impl VadMode {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            VadMode::Quality => "quality",
+            VadMode::LowBitrate => "low_bitrate",
+            VadMode::Aggressive => "aggressive",
+            VadMode::VeryAggressive => "very_aggressive",
+        }
+    }
+}
+
 /// VAD (Voice Activity Detection) configuration
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VadConfig {
     pub threshold_level: f32,
     pub debounce_times: usize,
+    pub mode: VadMode,
 }
 
 impl Default for VadConfig {
@@ -79,6 +106,7 @@ impl Default for VadConfig {
         Self {
             threshold_level: 0.1,
             debounce_times: 160,
+            mode: VadMode::VeryAggressive,
         }
     }
 }

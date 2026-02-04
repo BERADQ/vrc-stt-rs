@@ -640,6 +640,43 @@ impl VrcSttApp {
                 ui.add_space(4.0);
 
                 let config = &mut self.config_manager.config_mut();
+
+                // VAD Mode selection
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.vad.mode"));
+                    egui::ComboBox::from_id_salt("vad_mode")
+                        .selected_text(match config.vad.mode {
+                            common::config::VadMode::Quality => t!("settings.vad.mode.quality"),
+                            common::config::VadMode::LowBitrate => t!("settings.vad.mode.low_bitrate"),
+                            common::config::VadMode::Aggressive => t!("settings.vad.mode.aggressive"),
+                            common::config::VadMode::VeryAggressive => t!("settings.vad.mode.very_aggressive"),
+                        })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(
+                                &mut config.vad.mode,
+                                common::config::VadMode::Quality,
+                                t!("settings.vad.mode.normal"),
+                            );
+                            ui.selectable_value(
+                                &mut config.vad.mode,
+                                common::config::VadMode::LowBitrate,
+                                t!("settings.vad.mode.low_bitrate"),
+                            );
+                            ui.selectable_value(
+                                &mut config.vad.mode,
+                                common::config::VadMode::Aggressive,
+                                t!("settings.vad.mode.aggressive"),
+                            );
+                            ui.selectable_value(
+                                &mut config.vad.mode,
+                                common::config::VadMode::VeryAggressive,
+                                t!("settings.vad.mode.very_aggressive"),
+                            );
+                        });
+                });
+
+                ui.add_space(4.0);
+
                 ui.horizontal(|ui| {
                     ui.label(t!("settings.vad.threshold"));
                     ui.add(

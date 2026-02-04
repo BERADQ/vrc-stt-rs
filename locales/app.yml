@@ -55,6 +55,26 @@ settings.vad:
   en: "Voice Detection Settings"
   zh-CN: "语音检测设置"
   ja-JP: "音声検出設定"
+settings.vad.mode:
+  en: "VAD Mode:"
+  zh-CN: "VAD 模式:"
+  ja-JP: "VAD モード:"
+settings.vad.mode.quality:
+  en: "Quality"
+  zh-CN: "质量"
+  ja-JP: "品質"
+settings.vad.mode.low_bitrate:
+  en: "Low Bitrate"
+  zh-CN: "低比特率"
+  ja-JP: "低ビットレート"
+settings.vad.mode.aggressive:
+  en: "Aggressive"
+  zh-CN: "积极"
+  ja-JP: "アグレッシブ"
+settings.vad.mode.very_aggressive:
+  en: "Very Aggressive"
+  zh-CN: "非常积极"
+  ja-JP: "非常にアグレッシブ"
 settings.vad.threshold:
   en: "Threshold:"
   zh-CN: "阈值:"

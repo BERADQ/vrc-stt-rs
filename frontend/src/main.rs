@@ -1,3 +1,4 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{path::PathBuf, sync::mpsc};
 
 use eframe::egui;
@@ -10,11 +11,17 @@ mod utils;
 
 i18n!("../locales", fallback = "en");
 
+fn icon() -> anyhow::Result<egui::IconData> {
+    let icon_data = include_bytes!("../../arts/vrc-stt-rs.png");
+    let icon_data = eframe::icon_data::from_png_bytes(icon_data)?;
+    Ok(icon_data)
+}
+
 fn set_locale(lang: String) {
     rust_i18n::set_locale(&lang);
 }
 
-fn main() -> Result<(), eframe::Error> {
+fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let (msg_tx, msg_rx) = mpsc::channel();
@@ -72,6 +79,7 @@ fn main() -> Result<(), eframe::Error> {
                 constants::DEFAULT_WINDOW_WIDTH,
                 constants::DEFAULT_WINDOW_HEIGHT,
             ])
+            .with_icon(icon()?)
             .with_min_inner_size([constants::MIN_WINDOW_WIDTH, constants::MIN_WINDOW_HEIGHT]),
         ..Default::default()
     };
@@ -87,4 +95,7 @@ fn main() -> Result<(), eframe::Error> {
             )))
         }),
     )
+    .unwrap();
+
+    Ok(())
 }

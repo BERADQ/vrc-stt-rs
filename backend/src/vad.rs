@@ -2,7 +2,7 @@
 //!
 //! Wraps WebRTC VAD with amplitude-based thresholding and debounce logic.
 
-use common::config::ConfigManager;
+use common::config::{ConfigManager, VadMode};
 
 /// VAD wrapper with threshold and debounce
 pub struct VadWrapper {
@@ -21,7 +21,7 @@ impl VadWrapper {
         Self {
             vad: webrtc_vad::Vad::new_with_rate_and_mode(
                 webrtc_vad::SampleRate::Rate16kHz,
-                webrtc_vad::VadMode::VeryAggressive,
+                vad_mode_to_webrtc(config.vad.mode),
             ),
             threshold: config.vad.threshold_level.abs(),
             debounce_count: 0,
@@ -117,5 +117,15 @@ pub enum VadEvent {
 fn f32_to_i16_samples(samples: &[f32], output: &mut [i16]) {
     for (sample, out) in samples.iter().zip(output.iter_mut()) {
         *out = (*sample * 32768.0).clamp(-32768.0, 32767.0) as i16;
+    }
+}
+
+/// Convert our VadMode to webrtc_vad::VadMode
+fn vad_mode_to_webrtc(mode: VadMode) -> webrtc_vad::VadMode {
+    match mode {
+        VadMode::Quality => webrtc_vad::VadMode::Quality,
+        VadMode::LowBitrate => webrtc_vad::VadMode::LowBitrate,
+        VadMode::Aggressive => webrtc_vad::VadMode::Aggressive,
+        VadMode::VeryAggressive => webrtc_vad::VadMode::VeryAggressive,
     }
 }
