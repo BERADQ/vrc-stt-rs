@@ -1,6 +1,6 @@
 use std::net::{ToSocketAddrs, UdpSocket};
 
-use rosc::{encoder, OscMessage, OscPacket, OscType};
+use rosc::{OscMessage, OscPacket, OscType, encoder};
 
 use common::config::Config;
 

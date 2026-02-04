@@ -3,7 +3,7 @@ use common::config::ConfigManager;
 pub struct VadWrapper {
     vad: webrtc_vad::Vad,
     debounce_count: usize,
-    threshold: i16,
+    threshold: f32,
     in_voice: bool,
     buffer: Vec<f32>,
     config_manager: ConfigManager,
@@ -17,7 +17,7 @@ impl VadWrapper {
                 webrtc_vad::SampleRate::Rate16kHz,
                 webrtc_vad::VadMode::VeryAggressive,
             ),
-            threshold: (config.vad.threshold_level.abs() * 32767.0).round() as i16,
+            threshold: (config.vad.threshold_level.abs() * 1.0).round(),
             debounce_count: 0,
             in_voice: false,
             buffer: Vec::new(),
@@ -26,9 +26,11 @@ impl VadWrapper {
     }
 
     /// Returns debounced voice state for the given audio chunk.
-    fn is_voice_segment(&mut self, data: &[i16]) -> Result<bool, ()> {
+    fn is_voice_segment(&mut self, data: &[f32]) -> Result<bool, ()> {
         // First check VAD
-        let is_voice_vad = self.vad.is_voice_segment(data)?;
+        let mut data_i16: [i16; 160] = [0; 160];
+        f32_samples_to_i16(data, &mut data_i16);
+        let is_voice_vad = self.vad.is_voice_segment(&data_i16)?;
 
         // VAD says voice, check amplitude threshold
         let threshold = self.threshold;
@@ -53,7 +55,7 @@ impl VadWrapper {
         true
     }
 
-    pub fn segment_parse(&mut self, data: &[i16]) -> Result<VadEvent, ()> {
+    pub fn segment_parse(&mut self, data: &[f32]) -> Result<VadEvent, ()> {
         let current_voice = self.is_voice_segment(data)?;
         let prev_voice = self.in_voice;
 
@@ -63,12 +65,12 @@ impl VadWrapper {
                 self.in_voice = true;
                 self.buffer.clear();
                 // Convert i16 samples to f32 in range [-1.0, 1.0]
-                self.buffer.extend(data.iter().map(|&x| x as f32 / 32768.0));
+                self.buffer.extend(data);
                 Ok(VadEvent::Start)
             }
             (true, true) => {
                 // Voice continues, accumulate samples
-                self.buffer.extend(data.iter().map(|&x| x as f32 / 32768.0));
+                self.buffer.extend(data);
                 Ok(VadEvent::Recording)
             }
             (true, false) => {
@@ -92,4 +94,10 @@ pub enum VadEvent {
     Pending,
     Recording,
     End(Vec<f32>),
+}
+
+fn f32_samples_to_i16(samples: &[f32], buffer: &mut [i16]) {
+    for (sample, out) in samples.iter().zip(buffer.iter_mut()) {
+        *out = (*sample * 32768.0).round() as i16;
+    }
 }

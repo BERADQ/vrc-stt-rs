@@ -1,13 +1,13 @@
 use std::io::{BufRead, BufReader, Write};
 #[cfg(target_os = "linux")]
 use std::os::unix::net::UnixStream;
-#[cfg(target_os = "windows")]
-use uds_windows::UnixStream;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
+#[cfg(target_os = "windows")]
+use uds_windows::UnixStream;
 
 use common::SocketMessage;
 use rust_i18n::t;

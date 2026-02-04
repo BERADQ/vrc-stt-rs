@@ -11,6 +11,38 @@ no.supported.16kHz:
   en: "No input config supporting 16000 Hz"
   zh-CN: "找不到支持 16000 Hz 的输入配置"
   ja-JP: "16000 Hz をサポートする入力設定がありません"
+found.16kHz.support:
+  en: "Found 16kHz support"
+  zh-CN: "找到 16kHz 支持"
+  ja-JP: "16kHz のサポートが見つかりました"
+fallback.24kHz.using:
+  en: "16kHz not supported, falling back to 24kHz with resampling"
+  zh-CN: "不支持 16kHz，将使用 24kHz 并进行重采样"
+  ja-JP: "16kHz がサポートされていないため、24kHz でリサンプリングします"
+fallback.other_rate.using:
+  en: "Using %{rate}Hz with resampling to 16kHz"
+  zh-CN: "使用 %{rate}Hz 并重采样到 16kHz"
+  ja-JP: "%{rate}Hz を使用し、16kHz にリサンプリングします"
+no.supported.sample_rate:
+  en: "No supported sample rate found (tried 16kHz, 24kHz, 48kHz, 44.1kHz, 32kHz, 22.05kHz)"
+  zh-CN: "找不到支持的采样率（已尝试 16kHz, 24kHz, 48kHz, 44.1kHz, 32kHz, 22.05kHz）"
+  ja-JP: "サポートされているサンプルレートが見つかりません（16kHz, 24kHz, 48kHz, 44.1kHz, 32kHz, 22.05kHz を試行）"
+using.sample_rate:
+  en: "Using sample rate: %{rate}Hz (target: %{target}Hz)"
+  zh-CN: "使用采样率: %{rate}Hz（目标: %{target}Hz）"
+  ja-JP: "サンプルレートを使用: %{rate}Hz（目標: %{target}Hz）"
+buffer.size.set:
+  en: "Buffer size set to %{frames} frames (sample rate: %{rate}Hz)"
+  zh-CN: "缓冲区大小设置为 %{frames} 帧（采样率: %{rate}Hz）"
+  ja-JP: "バッファサイズを %{frames} フレームに設定（サンプルレート: %{rate}Hz）"
+resampler.initializing:
+  en: "Initializing resampler from %{from}Hz to 16000Hz"
+  zh-CN: "初始化重采样器：从 %{from}Hz 到 16000Hz"
+  ja-JP: "リサンプラーを初期化中: %{from}Hz から 16000Hz へ"
+resample.error:
+  en: "Resampling error: %{error}"
+  zh-CN: "重采样错误: %{error}"
+  ja-JP: "リサンプリングエラー: %{error}"
 error.prefix:
   en: "Error: %{error}"
   zh-CN: "错误：%{error}"
