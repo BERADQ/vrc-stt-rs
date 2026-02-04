@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::{path::PathBuf, sync::mpsc};
 
 use eframe::egui;
 use rust_i18n::{i18n, t};
@@ -21,7 +21,8 @@ fn main() -> Result<(), eframe::Error> {
 
     // Start Unix socket server BEFORE starting backend (backend will connect to us)
     let socket_path = std::env::var("VRC_STT_SOCKET")
-        .unwrap_or_else(|_| common::default_socket_path().to_string());
+        .map(|s| PathBuf::from(s))
+        .unwrap_or_else(|_| common::default_socket_path());
 
     let mut socket_server = socket::SocketServer::new(socket_path, msg_tx.clone());
     match socket_server.start() {

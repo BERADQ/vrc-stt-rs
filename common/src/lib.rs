@@ -32,15 +32,10 @@ impl SocketMessage {
 }
 
 /// Default Unix socket path
-pub const fn default_socket_path() -> &'static str {
-    #[cfg(target_os = "linux")]
-    {
-        "/tmp/vrc-stt.sock"
-    }
-    #[cfg(target_os = "windows")]
-    {
-        "C:\\tmp\\vrc-stt.sock"
-    }
+pub fn default_socket_path() -> std::path::PathBuf {
+    let mut path = std::env::temp_dir();
+    path.push("vrc-stt.sock");
+    path
 }
 
 /// Configuration types

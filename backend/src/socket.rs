@@ -1,6 +1,7 @@
 use std::io::{BufRead, BufReader, Write};
 #[cfg(target_os = "linux")]
 use std::os::unix::net::UnixStream;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
@@ -14,7 +15,7 @@ use rust_i18n::t;
 
 /// Unix socket client that connects to the frontend with automatic reconnection
 pub struct SocketClient {
-    socket_path: String,
+    socket_path: PathBuf,
     connection: Arc<Mutex<Option<UnixStream>>>,
     stop_signal: Arc<AtomicBool>,
     connection_handle: Option<JoinHandle<()>>,
@@ -22,9 +23,9 @@ pub struct SocketClient {
 
 impl SocketClient {
     /// Create a new socket client
-    pub fn new(socket_path: String) -> Self {
+    pub fn new(socket_path: impl Into<PathBuf>) -> Self {
         Self {
-            socket_path,
+            socket_path: socket_path.into(),
             connection: Arc::new(Mutex::new(None)),
             stop_signal: Arc::new(AtomicBool::new(false)),
             connection_handle: None,
@@ -46,11 +47,11 @@ impl SocketClient {
                     break;
                 }
 
-                log::info!("{}", t!("socket.connect.attempt", path = socket_path));
+                log::info!("{}", t!("socket.connect.attempt", path = socket_path.display()));
 
                 match UnixStream::connect(&socket_path) {
                     Ok(stream) => {
-                        log::info!("{}", t!("socket.connected", path = socket_path));
+                        log::info!("{}", t!("socket.connected", path = socket_path.display()));
 
                         // Store connection
                         *connection.lock().unwrap() = Some(stream.try_clone().unwrap());
@@ -174,7 +175,8 @@ impl SocketServer {
     /// Create a new socket "server" (now a client that connects to frontend)
     pub fn new() -> anyhow::Result<(Self, Receiver<SocketMessage>)> {
         let socket_path = std::env::var("VRC_STT_SOCKET")
-            .unwrap_or_else(|_| common::default_socket_path().to_string());
+            .map(|s| PathBuf::from(s))
+            .unwrap_or_else(|_| common::default_socket_path());
 
         let mut client = SocketClient::new(socket_path);
 

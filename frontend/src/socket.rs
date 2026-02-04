@@ -1,14 +1,15 @@
 use std::io::{BufRead, BufReader, Write};
 #[cfg(target_os = "linux")]
 use std::os::unix::net::{UnixListener, UnixStream};
-#[cfg(target_os = "windows")]
-use uds_windows::{UnixListener, UnixStream};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::Sender;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::Sender;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
+#[cfg(target_os = "windows")]
+use uds_windows::{UnixListener, UnixStream};
 
 use common::SocketMessage;
 use rust_i18n::t;
@@ -40,7 +41,7 @@ pub enum ConnectionState {
 
 /// Unix socket server that listens for a single backend connection
 pub struct SocketServer {
-    socket_path: String,
+    socket_path: PathBuf,
     msg_tx: Sender<FrontendMessage>,
     connection_state: Arc<Mutex<ConnectionState>>,
     stop_signal: Arc<AtomicBool>,
@@ -49,9 +50,9 @@ pub struct SocketServer {
 
 impl SocketServer {
     /// Create a new socket server
-    pub fn new(socket_path: String, msg_tx: Sender<FrontendMessage>) -> Self {
+    pub fn new(socket_path: impl Into<PathBuf>, msg_tx: Sender<FrontendMessage>) -> Self {
         Self {
-            socket_path,
+            socket_path: socket_path.into(),
             msg_tx,
             connection_state: Arc::new(Mutex::new(ConnectionState::Disconnected)),
             stop_signal: Arc::new(AtomicBool::new(false)),
@@ -69,12 +70,12 @@ impl SocketServer {
                     // Socket is still active, don't delete it
                     return Err(anyhow::anyhow!(
                         "Socket file {} is already in use by another process",
-                        self.socket_path
+                        self.socket_path.display()
                     ));
                 }
                 Err(_) => {
                     // Socket is not active, safe to delete
-                    log::info!("{}", t!("socket.remove.stale", path = self.socket_path));
+                    log::info!("{}", t!("socket.remove.stale", path = self.socket_path.display()));
                     if let Err(e) = std::fs::remove_file(&self.socket_path) {
                         log::warn!("{}", t!("socket.remove.failed", error = e));
                     }
@@ -83,7 +84,7 @@ impl SocketServer {
         }
 
         let listener = UnixListener::bind(&self.socket_path)?;
-        log::info!("{}", t!("socket.server.listening", path = self.socket_path));
+        log::info!("{}", t!("socket.server.listening", path = self.socket_path.display()));
 
         let msg_tx = self.msg_tx.clone();
         let stop_signal = self.stop_signal.clone();
@@ -135,8 +136,8 @@ impl SocketServer {
             log::info!("{}", t!("socket.server.stopped"));
 
             // Clean up socket file
-            if std::path::Path::new(&socket_path_clone).exists() {
-                log::info!("{}", t!("socket.remove.file", path = socket_path_clone));
+            if socket_path_clone.exists() {
+                log::info!("{}", t!("socket.remove.file", path = socket_path_clone.display()));
                 if let Err(e) = std::fs::remove_file(&socket_path_clone) {
                     log::warn!("{}", t!("socket.remove.failed", error = e));
                 }
@@ -163,7 +164,7 @@ impl SocketServer {
 
         // Clean up socket file
         if std::path::Path::new(&self.socket_path).exists() {
-            log::info!("{}", t!("socket.remove.file", path = self.socket_path));
+            log::info!("{}", t!("socket.remove.file", path = self.socket_path.display()));
             if let Err(e) = std::fs::remove_file(&self.socket_path) {
                 log::warn!("{}", t!("socket.remove.failed", error = e));
             }
