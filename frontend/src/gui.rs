@@ -910,7 +910,7 @@ impl VrcSttApp {
                 });
 
                 // CUDA redistribution notice - only on Windows with cuda feature enabled
-                #[cfg(all(windows, feature = "cuda"))]
+                #[cfg(feature = "cuda")]
                 {
                     ui.add_space(20.0);
 
