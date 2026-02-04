@@ -1,3 +1,4 @@
+use std::env::current_dir;
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
 use std::thread;
@@ -73,6 +74,15 @@ impl BackendManager {
         if !std::env::var("RUST_LOG").is_ok_and(|e| !e.is_empty()) {
             command.env("RUST_LOG", "warn");
         }
+
+        #[cfg(all(target_os = "windows", feature = "cuda"))]
+        {
+            use std::env::current_exe;
+
+            command.env("CUDA_PATH", current_exe()?);
+            command.env("LD_LIBRARY_PATH", current_exe()?);
+        }
+
         // Start the backend process with captured stdout and stderr
         let mut child = command
             .current_dir(&std::env::current_dir()?)
