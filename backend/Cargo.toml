@@ -20,3 +20,10 @@ serde_json.workspace = true
 uds_windows.workspace = true
 webrtc-vad = "0.4.0"
 whisper-rs = { version = "0.15.1", features = ["cuda"] }
+
+[features]
+default = ["vulkan"]
+cuda = ["whisper-rs/cuda"]
+vulkan = ["whisper-rs/vulkan"]
+openblas = ["whisper-rs/openblas"]
+intel-sycl = ["whisper-rs/intel-sycl"]

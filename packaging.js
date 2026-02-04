@@ -56,26 +56,57 @@ function checkPackageVersions() {
     }
 }
 
-function buildAndPackage() {
-    console.log('Starting build and packaging process...');
+function getPlatformInfo() {
+    // Map Node.js platform to system name
+    const platformMap = {
+        'win32': 'windows',
+        'linux': 'linux',
+        'darwin': 'macos',
+        'freebsd': 'freebsd'
+    };
+    
+    // Map Node.js arch to CPU architecture name
+    const archMap = {
+        'x64': 'x64',
+        'arm64': 'arm64',
+        'ia32': 'x86',
+        'arm': 'arm'
+    };
+    
+    const osName = platformMap[process.platform] || process.platform;
+    const archName = archMap[process.arch] || process.arch;
+    
+    return { osName, archName };
+}
 
-    // Check versions first
-    const version = checkPackageVersions();
-
-    // Build both binaries in release mode using -p flag to specify packages
-    console.log('Building backend binary with cargo build --release -p backend...');
+function buildBackend(backendType) {
+    console.log(`Building backend (${backendType})...`);
+    
+    let buildCmd;
+    if (backendType === 'vulkan') {
+        // Vulkan uses default features
+        buildCmd = 'cargo build --release -p backend';
+    } else if (backendType === 'cuda') {
+        // CUDA needs explicit feature and no-default-features
+        buildCmd = 'cargo build --release -p backend --features cuda --no-default-features';
+    } else {
+        throw new Error(`Unknown backend type: ${backendType}`);
+    }
+    
     try {
-        execSync('cargo build --release -p backend', {
+        execSync(buildCmd, {
             stdio: 'inherit',
             cwd: process.cwd()
         });
-        console.log('Backend build completed successfully.');
+        console.log(`Backend (${backendType}) build completed successfully.`);
     } catch (error) {
-        console.error('Error building backend:', error.message);
+        console.error(`Error building backend (${backendType}):`, error.message);
         process.exit(1);
     }
-    
-    console.log('Building frontend binary with cargo build --release -p frontend...');
+}
+
+function buildFrontend() {
+    console.log('Building frontend binary...');
     try {
         execSync('cargo build --release -p frontend', {
             stdio: 'inherit',
@@ -86,7 +117,11 @@ function buildAndPackage() {
         console.error('Error building frontend:', error.message);
         process.exit(1);
     }
+}
 
+function createPackage(backendType, version, osName, archName) {
+    console.log(`\n========== Packaging ${backendType.toUpperCase()} version ==========`);
+    
     // Determine binary extension based on platform
     const exeExt = process.platform === 'win32' ? '.exe' : '';
 
@@ -104,11 +139,11 @@ function buildAndPackage() {
         process.exit(1);
     }
 
-    // Create archive name using version
-    const archiveName = `vrc-stt-rs-${version}.7z`;
+    // Create archive name: {backendType}-{os}-{arch}-{version}.7z
+    const archiveName = `${backendType}-${osName}-${archName}-${version}.7z`;
     
     // Create temporary directory with same name as archive (without extension)
-    const tempDir = `vrc-stt-rs-${version}`;
+    const tempDir = `${backendType}-${osName}-${archName}-${version}`;
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
     }
@@ -153,7 +188,37 @@ function buildAndPackage() {
     // Cleanup temp directory
     execSync(`rm -rf "${tempDir}"`);
     console.log('Temporary directory cleaned up.');
-    console.log('Packaging process completed successfully!');
+}
+
+function buildAndPackage() {
+    console.log('Starting build and packaging process...');
+
+    // Check versions first
+    const version = checkPackageVersions();
+    
+    // Get platform info
+    const { osName, archName } = getPlatformInfo();
+    console.log(`Platform: ${osName}, Architecture: ${archName}`);
+
+    // Build frontend (only needs to be built once, shared by both backends)
+    buildFrontend();
+
+    // Build and package Vulkan version
+    console.log('\n========== Building VULKAN backend ==========');
+    buildBackend('vulkan');
+    createPackage('vulkan', version, osName, archName);
+
+    // Build and package CUDA version
+    console.log('\n========== Building CUDA backend ==========');
+    buildBackend('cuda');
+    createPackage('cuda', version, osName, archName);
+
+    console.log('\n========================================');
+    console.log('All packaging completed successfully!');
+    console.log(`Output files:`);
+    console.log(`  - vulkan-${osName}-${archName}-${version}.7z`);
+    console.log(`  - cuda-${osName}-${archName}-${version}.7z`);
+    console.log('========================================');
 }
 
 // Run the build and packaging
