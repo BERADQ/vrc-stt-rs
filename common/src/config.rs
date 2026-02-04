@@ -17,9 +17,9 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            model_path: "./model/large-turbo-zh.bin".to_owned(),
+            model_path: "./model/medium.bin".to_owned(),
             vad: VadConfig::default(),
-            language: "zh".to_owned(),
+            language: "en".to_owned(),
             udp: UdpConfig::default(),
             initial_prompt: None,
             interface_language: "en".to_owned(),

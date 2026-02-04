@@ -6,3 +6,6 @@ default:
 
 release:
     node packaging.js
+
+get-model:
+    wget https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O model/medium.bin
