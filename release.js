@@ -121,6 +121,70 @@ function buildFrontend() {
     }
 }
 
+// CUDA DLLs required for whisper.cpp on Windows
+const CUDA_DLL_PATTERNS = [
+    'cudart64_*.dll',      // CUDA Runtime
+    'cublas64_*.dll',      // cuBLAS
+    'cublasLt64_*.dll',    // cuBLAS Lt
+];
+
+function findCUDADLLs() {
+    const dlls = [];
+
+    if (process.platform !== 'win32') {
+        return dlls;
+    }
+
+    if (!process.env.CUDA_PATH) {
+        console.warn('Warning: CUDA_PATH environment variable not set');
+        return dlls;
+    }
+
+    const cudaBinPath = path.join(process.env.CUDA_PATH, 'bin');
+
+    if (!fs.existsSync(cudaBinPath)) {
+        console.warn(`Warning: CUDA bin directory not found at: ${cudaBinPath}`);
+        return dlls;
+    }
+
+    try {
+        const files = fs.readdirSync(cudaBinPath);
+        for (const file of files) {
+            for (const pattern of CUDA_DLL_PATTERNS) {
+                // Convert glob pattern to regex
+                const regex = new RegExp('^' + pattern.replace(/\*/g, '\\d+') + '$', 'i');
+                if (regex.test(file)) {
+                    dlls.push({ name: file, path: path.join(cudaBinPath, file) });
+                }
+            }
+        }
+    } catch (e) {
+        console.warn(`Warning: Error reading CUDA bin directory: ${e.message}`);
+    }
+
+    return dlls;
+}
+
+function copyFile(src, dest) {
+    if (process.platform === 'win32') {
+        execSync(`copy "${src}" "${dest}"`, { stdio: 'ignore' });
+    } else {
+        execSync(`cp "${src}" "${dest}"`);
+    }
+}
+
+function removeDir(dir) {
+    if (process.platform === 'win32') {
+        try {
+            execSync(`rmdir /S /Q "${dir}"`, { stdio: 'ignore' });
+        } catch (e) {
+            // ignore
+        }
+    } else {
+        execSync(`rm -rf "${dir}"`);
+    }
+}
+
 function createPackage(backendType, version, osName, archName) {
     console.log(`\n========== Packaging ${backendType.toUpperCase()} version ==========`);
 
@@ -147,28 +211,40 @@ function createPackage(backendType, version, osName, archName) {
 
     // Create temporary directory with same name as archive (without extension)
     const tempDir = path.join('target', `${backendType}-${osName}-${archName}-${version}`);
-    if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-    }
 
     // Ensure temp directory is clean
-    if (fs.existsSync(tempDir)) {
-        execSync(`rm -rf "${tempDir}"`);
-    }
-    fs.mkdirSync(tempDir);
+    removeDir(tempDir);
+    fs.mkdirSync(tempDir, { recursive: true });
 
     console.log(`Created temporary directory: ${tempDir}`);
 
     // Copy binaries to temp directory
     // Backend: copy without renaming
     const backendDest = path.join(tempDir, `backend${exeExt}`);
-    execSync(`cp "${backendBinaryPath}" "${backendDest}"`);
+    copyFile(backendBinaryPath, backendDest);
     console.log(`Copied backend to: ${backendDest}`);
 
     // Frontend: copy and rename to vrc-stt-rs
     const frontendDest = path.join(tempDir, `vrc-stt-rs${exeExt}`);
-    execSync(`cp "${frontendBinaryPath}" "${frontendDest}"`);
+    copyFile(frontendBinaryPath, frontendDest);
     console.log(`Copied frontend to: ${frontendDest} (renamed from frontend)`);
+
+    // For CUDA on Windows, copy required CUDA DLLs
+    if (backendType === 'cuda' && process.platform === 'win32') {
+        console.log('Looking for CUDA DLLs...');
+        const cudaDlls = findCUDADLLs();
+        if (cudaDlls.length > 0) {
+            console.log(`Found ${cudaDlls.length} CUDA DLL(s):`);
+            for (const dll of cudaDlls) {
+                const dllDest = path.join(tempDir, dll.name);
+                copyFile(dll.path, dllDest);
+                console.log(`  - ${dll.name}`);
+            }
+        } else {
+            console.warn('Warning: No CUDA DLLs found. The package may not work on systems without CUDA installed.');
+            console.warn('Make sure CUDA Toolkit is installed and CUDA_PATH is set correctly.');
+        }
+    }
 
     // Check if 7z is available
     try {
@@ -176,26 +252,32 @@ function createPackage(backendType, version, osName, archName) {
     } catch (error) {
         console.error('7z command not found. Please install 7-zip.');
         // Cleanup temp directory before exiting
-        execSync(`rm -rf "${tempDir}"`);
+        removeDir(tempDir);
         process.exit(1);
     }
 
     // Create 7z archive
     console.log(`Creating archive: ${archivePath}`);
     try {
-        execSync(`7z a "${archivePath}" "${tempDir}"/*`, {
-            stdio: 'inherit'
-        });
+        if (process.platform === 'win32') {
+            execSync(`7z a "${archivePath}" "${tempDir}\\*"`, {
+                stdio: 'inherit'
+            });
+        } else {
+            execSync(`7z a "${archivePath}" "${tempDir}"/*`, {
+                stdio: 'inherit'
+            });
+        }
         console.log(`Archive created successfully: ${archivePath}`);
     } catch (error) {
         console.error('Error creating archive:', error.message);
         // Cleanup temp directory
-        execSync(`rm -rf "${tempDir}"`);
+        removeDir(tempDir);
         process.exit(1);
     }
 
     // Cleanup temp directory
-    execSync(`rm -rf "${tempDir}"`);
+    removeDir(tempDir);
     console.log('Temporary directory cleaned up.');
 }
 
