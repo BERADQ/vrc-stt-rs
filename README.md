@@ -1,8 +1,10 @@
 # VRC-STT-RS
 
+<img src="./arts/vrc-stt-rs.svg" width="256">
+
 Real-time speech-to-text for VRChat using Whisper. Captures microphone input, transcribes speech with OpenAI's Whisper model, and sends text to VRChat via OSC.
 
-[中文版本](./README.zh_CN.md)
+[中文版本](./README.zh_CN.md) | [日本語バージョン](./README.ja_JP.md)
 
 ## Quick Start
 

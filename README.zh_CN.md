@@ -1,5 +1,7 @@
 # VRC-STT-RS
 
+<img src="./arts/vrc-stt-rs.svg" width="256">
+
 适用于 VRChat 的实时语音转文字工具，基于 Whisper 实现。捕捉麦克风输入，使用 OpenAI 的 Whisper 模型实时转录语音，并通过 OSC 发送文字到 VRChat。
 
 [English Version](./README.md)
