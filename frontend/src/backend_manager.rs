@@ -77,7 +77,9 @@ impl BackendManager {
         #[cfg(all(target_os = "windows", feature = "cuda"))]
         {
             use std::env::current_exe;
+            use std::os::windows::process::CommandExt;
 
+            command.creation_flags(0x08000000); // CREATE_NO_WINDOW
             command.env("CUDA_PATH", current_exe()?);
             command.env("LD_LIBRARY_PATH", current_exe()?);
         }

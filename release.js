@@ -140,7 +140,7 @@ function findCUDADLLs() {
         return dlls;
     }
 
-    const cudaBinPath = path.join(process.env.CUDA_PATH, 'bin');
+    const cudaBinPath = path.join(process.env.CUDA_PATH, 'bin', 'x64');
 
     if (!fs.existsSync(cudaBinPath)) {
         console.warn(`Warning: CUDA bin directory not found at: ${cudaBinPath}`);
