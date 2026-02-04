@@ -2,6 +2,7 @@
 name = "backend"
 version = "0.2.0-beta.a"
 edition = "2024"
+repository = "https://github.com/BERADQ/vrc-stt-rs"
 
 [dependencies]
 anyhow.workspace = true
@@ -24,6 +25,6 @@ whisper-rs = { version = "0.15.1", features = ["cuda"] }
 [features]
 default = ["vulkan"]
 cuda = ["whisper-rs/cuda"]
-vulkan = ["whisper-rs/vulkan"]
-openblas = ["whisper-rs/openblas"]
 intel-sycl = ["whisper-rs/intel-sycl"]
+openblas = ["whisper-rs/openblas"]
+vulkan = ["whisper-rs/vulkan"]

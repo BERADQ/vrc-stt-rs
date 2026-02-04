@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -64,7 +66,7 @@ function getPlatformInfo() {
         'darwin': 'macos',
         'freebsd': 'freebsd'
     };
-    
+
     // Map Node.js arch to CPU architecture name
     const archMap = {
         'x64': 'x64',
@@ -72,16 +74,16 @@ function getPlatformInfo() {
         'ia32': 'x86',
         'arm': 'arm'
     };
-    
+
     const osName = platformMap[process.platform] || process.platform;
     const archName = archMap[process.arch] || process.arch;
-    
+
     return { osName, archName };
 }
 
 function buildBackend(backendType) {
     console.log(`Building backend (${backendType})...`);
-    
+
     let buildCmd;
     if (backendType === 'vulkan') {
         // Vulkan uses default features
@@ -92,7 +94,7 @@ function buildBackend(backendType) {
     } else {
         throw new Error(`Unknown backend type: ${backendType}`);
     }
-    
+
     try {
         execSync(buildCmd, {
             stdio: 'inherit',
@@ -121,7 +123,7 @@ function buildFrontend() {
 
 function createPackage(backendType, version, osName, archName) {
     console.log(`\n========== Packaging ${backendType.toUpperCase()} version ==========`);
-    
+
     // Determine binary extension based on platform
     const exeExt = process.platform === 'win32' ? '.exe' : '';
 
@@ -141,12 +143,19 @@ function createPackage(backendType, version, osName, archName) {
 
     // Create archive name: {backendType}-{os}-{arch}-{version}.7z
     const archiveName = `${backendType}-${osName}-${archName}-${version}.7z`;
-    
+    const archivePath = path.join('target', archiveName);
+
     // Create temporary directory with same name as archive (without extension)
-    const tempDir = `${backendType}-${osName}-${archName}-${version}`;
+    const tempDir = path.join('target', `${backendType}-${osName}-${archName}-${version}`);
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
     }
+
+    // Ensure temp directory is clean
+    if (fs.existsSync(tempDir)) {
+        execSync(`rm -rf "${tempDir}"`);
+    }
+    fs.mkdirSync(tempDir);
 
     console.log(`Created temporary directory: ${tempDir}`);
 
@@ -172,12 +181,12 @@ function createPackage(backendType, version, osName, archName) {
     }
 
     // Create 7z archive
-    console.log(`Creating archive: ${archiveName}`);
+    console.log(`Creating archive: ${archivePath}`);
     try {
-        execSync(`7z a "${archiveName}" "${tempDir}"/*`, {
+        execSync(`7z a "${archivePath}" "${tempDir}"/*`, {
             stdio: 'inherit'
         });
-        console.log(`Archive created successfully: ${archiveName}`);
+        console.log(`Archive created successfully: ${archivePath}`);
     } catch (error) {
         console.error('Error creating archive:', error.message);
         // Cleanup temp directory
@@ -195,7 +204,7 @@ function buildAndPackage() {
 
     // Check versions first
     const version = checkPackageVersions();
-    
+
     // Get platform info
     const { osName, archName } = getPlatformInfo();
     console.log(`Platform: ${osName}, Architecture: ${archName}`);
@@ -215,9 +224,9 @@ function buildAndPackage() {
 
     console.log('\n========================================');
     console.log('All packaging completed successfully!');
-    console.log(`Output files:`);
-    console.log(`  - vulkan-${osName}-${archName}-${version}.7z`);
-    console.log(`  - cuda-${osName}-${archName}-${version}.7z`);
+    console.log(`Output files (in target/ directory):`);
+    console.log(`  - target/vulkan-${osName}-${archName}-${version}.7z`);
+    console.log(`  - target/cuda-${osName}-${archName}-${version}.7z`);
     console.log('========================================');
 }
 

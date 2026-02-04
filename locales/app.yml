@@ -171,3 +171,41 @@ log.type.stderr:
   en: "STDERR"
   zh-CN: "标准错误"
   ja-JP: "標準エラー"
+
+# About page
+about.title:
+  en: "About"
+  zh-CN: "关于"
+  ja-JP: "について"
+navigation.about:
+  en: "ℹ About"
+  zh-CN: "ℹ 关于"
+  ja-JP: "ℹ について"
+about.software.info:
+  en: "Software Information"
+  zh-CN: "软件信息"
+  ja-JP: "ソフトウェア情報"
+about.app.name:
+  en: "Application Name"
+  zh-CN: "应用名称"
+  ja-JP: "アプリケーション名"
+about.version:
+  en: "Version"
+  zh-CN: "版本"
+  ja-JP: "バージョン"
+about.repository:
+  en: "Repository"
+  zh-CN: "仓库地址"
+  ja-JP: "リポジトリ"
+about.libraries.attribution:
+  en: "Third-Party Libraries"
+  zh-CN: "第三方库"
+  ja-JP: "サードパーティライブラリ"
+about.third.party.licenses:
+  en: "Third-Party Licenses"
+  zh-CN: "第三方许可证"
+  ja-JP: "サードパーティライセンス"
+about.cuda.redistribution:
+  en: "CUDA Redistribution Notice"
+  zh-CN: "CUDA 分发声明"
+  ja-JP: "CUDA 再配布についての注意"

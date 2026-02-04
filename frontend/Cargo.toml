@@ -2,6 +2,7 @@
 name = "frontend"
 version = "0.2.0-beta.a"
 edition = "2024"
+repository = "https://github.com/BERADQ/vrc-stt-rs"
 
 [dependencies]
 anyhow.workspace = true
@@ -14,3 +15,6 @@ rust-i18n.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 uds_windows.workspace = true
+
+[features]
+cuda = []

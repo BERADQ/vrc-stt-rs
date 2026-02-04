@@ -1,8 +1,8 @@
 use chrono::{DateTime, Local};
-use common::{Config, ConfigManager, config};
+use common::{config, Config, ConfigManager};
 use eframe::egui::{self, Color32, Context, RichText, Ui};
 use rust_i18n::t;
-use std::sync::{Arc, mpsc};
+use std::sync::{mpsc, Arc};
 
 use crate::backend_manager::BackendManager;
 use crate::constants;
@@ -44,6 +44,7 @@ pub enum ViewState {
     Main,
     Settings,
     Logs,
+    About,
 }
 
 /// Single history entry
@@ -311,6 +312,7 @@ impl eframe::App for VrcSttApp {
 
         // Top panel with status and navigation
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            ui.add_space(3.0); // Top padding
             ui.horizontal(|ui| {
                 // Status on the left
                 ui.label(
@@ -332,35 +334,74 @@ impl eframe::App for VrcSttApp {
                             if ui.button(t!("logs.tab.label")).clicked() {
                                 self.view_state = ViewState::Logs;
                             }
+
+                            // Button to go to about page
+                            if ui.button(t!("navigation.about")).clicked() {
+                                self.view_state = ViewState::About;
+                            }
                         }
                         ViewState::Settings => {
-                            // On settings view, show back to main and logs button
+                            // On settings view, show back to main, logs and about button
                             if ui.button(t!("logs.tab.label")).clicked() {
                                 self.view_state = ViewState::Logs;
                             }
 
-                            if ui.button(t!("navigation.back")).clicked() {
+                            if ui.button(t!("navigation.about")).clicked() {
+                                self.view_state = ViewState::About;
+                            }
+
+                            if ui
+                                .button(RichText::new(t!("navigation.back")).strong())
+                                .clicked()
+                            {
                                 self.view_state = ViewState::Main;
                             }
                         }
                         ViewState::Logs => {
-                            // On logs view, show back to main and settings button
+                            // On logs view, show back to main, settings and about button
                             if ui.button(t!("navigation.settings")).clicked() {
                                 self.view_state = ViewState::Settings;
                             }
 
-                            if ui.button(t!("navigation.back")).clicked() {
+                            if ui.button(t!("navigation.about")).clicked() {
+                                self.view_state = ViewState::About;
+                            }
+
+                            if ui
+                                .button(RichText::new(t!("navigation.back")).strong())
+                                .clicked()
+                            {
+                                self.view_state = ViewState::Main;
+                            }
+                        }
+                        ViewState::About => {
+                            // On about view, show back to main, settings and logs button
+                            if ui.button(t!("navigation.settings")).clicked() {
+                                self.view_state = ViewState::Settings;
+                            }
+
+                            if ui.button(t!("logs.tab.label")).clicked() {
+                                self.view_state = ViewState::Logs;
+                            }
+
+                            if ui
+                                .button(RichText::new(t!("navigation.back")).strong())
+                                .clicked()
+                            {
                                 self.view_state = ViewState::Main;
                             }
                         }
                     }
                 });
             });
+            ui.add_space(1.0); // Bottom padding
         });
 
         // Bottom panel: Status bar
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+            ui.add_space(3.0); // Top padding
             ui.horizontal(|ui| {
+                // Left side: Status info
                 ui.label(utils::colored_text(
                     &t!(
                         "history.count",
@@ -378,7 +419,48 @@ impl eframe::App for VrcSttApp {
                         self.restart_backend();
                     }
                 }
+
+                // Right side: Save/Reset buttons (only in settings view)
+                if self.view_state == ViewState::Settings {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui.button(t!("settings.reset")).clicked() {
+                            if let Err(e) = self.config_manager.reload() {
+                                eprintln!("Failed to reload config: {}", e);
+                            }
+
+                            // Restart backend to apply reset configuration
+                            if let Err(e) = self.backend_manager.restart_backend() {
+                                log::error!(
+                                    "{}",
+                                    t!("config.reset.restart.backend.failed", error = e)
+                                );
+                            }
+                        }
+
+                        if ui.button(t!("settings.save")).clicked() {
+                            let config = self.config_manager.config().clone();
+                            if let Err(e) = self.config_manager.save() {
+                                eprintln!("Failed to save config: {}", e);
+                            }
+
+                            // Restart backend to apply new configuration
+                            if let Err(e) = self.backend_manager.restart_backend() {
+                                log::error!(
+                                    "{}",
+                                    t!("config.save.restart.backend.failed", error = e)
+                                );
+                            }
+
+                            // Backend will automatically connect to the frontend socket
+                            // Apply language setting
+                            if rust_i18n::locale().to_string() != config.interface_language {
+                                crate::set_locale(config.interface_language.clone());
+                            }
+                        }
+                    });
+                }
             });
+            ui.add_space(1.0); // Bottom padding
         });
 
         // Central panel: Content based on view state
@@ -386,6 +468,7 @@ impl eframe::App for VrcSttApp {
             ViewState::Main => self.render_history(ui),
             ViewState::Settings => self.render_settings(ui),
             ViewState::Logs => self.render_logs(ui),
+            ViewState::About => self.render_about(ui),
         });
 
         // Only request repaint when necessary, based on actual changes
@@ -477,176 +560,170 @@ impl VrcSttApp {
 
     fn render_settings(&mut self, ui: &mut Ui) {
         ui.heading(t!("settings.title"));
-        ui.add_space(16.0);
+        ui.add_space(12.0);
 
         egui::ScrollArea::vertical()
             .auto_shrink([false; 2])
             .show(ui, |ui| {
                 // Model settings
-                ui.collapsing(t!("settings.model"), |ui| {
-                    let config = &mut self.config_manager.config_mut();
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.model.path"));
-                        ui.add(
-                            egui::TextEdit::singleline(&mut config.model_path).desired_width(280.0),
-                        );
-                    });
+                ui.label(
+                    RichText::new(t!("settings.model"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
 
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.language"));
-                        ui.add(
-                            egui::TextEdit::singleline(&mut config.language).desired_width(100.0),
-                        );
-                    });
-
-                    let mut initial_prompt_str = config.initial_prompt.clone().unwrap_or_default();
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.initial.prompt"));
-                        ui.add(
-                            egui::TextEdit::singleline(&mut initial_prompt_str)
-                                .desired_width(280.0),
-                        );
-                    });
-                    config.initial_prompt = if initial_prompt_str.is_empty() {
-                        None
-                    } else {
-                        Some(initial_prompt_str)
-                    };
+                let config = &mut self.config_manager.config_mut();
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.model.path"));
+                    ui.add(egui::TextEdit::singleline(&mut config.model_path).desired_width(280.0));
                 });
 
-                ui.add_space(8.0);
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.language"));
+                    ui.add(egui::TextEdit::singleline(&mut config.language).desired_width(100.0));
+                });
+
+                let mut initial_prompt_str = config.initial_prompt.clone().unwrap_or_default();
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.initial.prompt"));
+                    ui.add(
+                        egui::TextEdit::singleline(&mut initial_prompt_str).desired_width(280.0),
+                    );
+                });
+                config.initial_prompt = if initial_prompt_str.is_empty() {
+                    None
+                } else {
+                    Some(initial_prompt_str)
+                };
+
+                ui.add_space(20.0);
 
                 // Interface language settings
-                ui.collapsing(t!("settings.interface.lang"), |ui| {
-                    let config = &mut self.config_manager.config_mut();
-                    ui.label(t!("settings.interface.lang.note"));
-                    ui.add_space(4.0);
+                ui.label(
+                    RichText::new(t!("settings.interface.lang"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
 
-                    egui::ComboBox::from_label("")
-                        .selected_text(&config.interface_language)
-                        .show_ui(ui, |ui| {
-                            for lang in common::ALL_LANG {
-                                ui.selectable_value(
-                                    &mut config.interface_language,
-                                    lang[1].to_string(),
-                                    lang[0],
-                                );
-                            }
-                        });
-                });
+                let config = &mut self.config_manager.config_mut();
+                ui.label(t!("settings.interface.lang.note"));
+                ui.add_space(4.0);
 
-                ui.add_space(8.0);
+                egui::ComboBox::from_label("")
+                    .selected_text(&config.interface_language)
+                    .show_ui(ui, |ui| {
+                        for lang in common::ALL_LANG {
+                            ui.selectable_value(
+                                &mut config.interface_language,
+                                lang[1].to_string(),
+                                lang[0],
+                            );
+                        }
+                    });
+
+                ui.add_space(20.0);
 
                 // VAD settings
-                ui.collapsing(t!("settings.vad"), |ui| {
-                    let config = &mut self.config_manager.config_mut();
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.vad.threshold"));
-                        ui.add(
-                            egui::Slider::new(&mut config.vad.threshold_level, 0.0..=1.0)
-                                .show_value(true),
-                        );
-                    });
+                ui.label(
+                    RichText::new(t!("settings.vad"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
 
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.vad.debounce"));
-                        let mut debounce = config.vad.debounce_times as i32;
-                        ui.add(egui::Slider::new(&mut debounce, 10..=500));
-                        config.vad.debounce_times = debounce as usize;
-                    });
+                let config = &mut self.config_manager.config_mut();
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.vad.threshold"));
+                    ui.add(
+                        egui::Slider::new(&mut config.vad.threshold_level, 0.0..=1.0)
+                            .show_value(true),
+                    );
                 });
 
-                ui.add_space(8.0);
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.vad.debounce"));
+                    let mut debounce = config.vad.debounce_times as i32;
+                    ui.add(egui::Slider::new(&mut debounce, 10..=500));
+                    config.vad.debounce_times = debounce as usize;
+                });
+
+                ui.add_space(20.0);
 
                 // Network settings
-                ui.collapsing(t!("settings.network"), |ui| {
-                    let config = &mut self.config_manager.config_mut();
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.udp.port"));
-                        let mut port = config.udp.port as i32;
-                        ui.add(egui::DragValue::new(&mut port).speed(1).range(1..=65535));
-                        config.udp.port = port as u16;
-                    });
+                ui.label(
+                    RichText::new(t!("settings.network"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
 
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.udp.target"));
-                        ui.add(egui::TextEdit::singleline(&mut config.udp.to).desired_width(200.0));
-                    });
+                let config = &mut self.config_manager.config_mut();
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.udp.port"));
+                    let mut port = config.udp.port as i32;
+                    ui.add(egui::DragValue::new(&mut port).speed(1).range(1..=65535));
+                    config.udp.port = port as u16;
                 });
 
-                ui.add_space(8.0);
+                ui.horizontal(|ui| {
+                    ui.label(t!("settings.udp.target"));
+                    ui.add(egui::TextEdit::singleline(&mut config.udp.to).desired_width(200.0));
+                });
+
+                ui.add_space(20.0);
 
                 // Audio settings
-                ui.collapsing(t!("settings.audio"), |ui| {
-                    let config = &mut self.config_manager.config_mut();
-                    ui.horizontal(|ui| {
-                        ui.label(t!("settings.audio.channel_mix_mode"));
-                        egui::ComboBox::from_id_salt("channel_mix_mode")
-                            .selected_text(match config.audio.channel_mix_mode {
-                                common::ChannelMixMode::MixToMono => {
-                                    t!("settings.audio.mix_to_mono")
-                                }
-                                common::ChannelMixMode::FirstChannel => {
-                                    t!("settings.audio.first_channel")
-                                }
-                                common::ChannelMixMode::SecondChannel => {
-                                    t!("settings.audio.second_channel")
-                                }
-                            })
-                            .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut config.audio.channel_mix_mode,
-                                    common::ChannelMixMode::MixToMono,
-                                    t!("settings.audio.mix_to_mono"),
-                                );
-                                ui.selectable_value(
-                                    &mut config.audio.channel_mix_mode,
-                                    common::ChannelMixMode::FirstChannel,
-                                    t!("settings.audio.first_channel"),
-                                );
-                                ui.selectable_value(
-                                    &mut config.audio.channel_mix_mode,
-                                    common::ChannelMixMode::SecondChannel,
-                                    t!("settings.audio.second_channel"),
-                                );
-                            });
-                    });
-                });
+                ui.label(
+                    RichText::new(t!("settings.audio"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
 
-                ui.add_space(24.0);
-
-                // Action buttons
+                let config = &mut self.config_manager.config_mut();
                 ui.horizontal(|ui| {
-                    if ui.button(t!("settings.save")).clicked() {
-                        let config = self.config_manager.config().clone();
-                        if let Err(e) = self.config_manager.save() {
-                            eprintln!("Failed to save config: {}", e);
-                        }
-
-                        // Restart backend to apply new configuration
-                        if let Err(e) = self.backend_manager.restart_backend() {
-                            log::error!("{}", t!("config.save.restart.backend.failed", error = e));
-                        }
-
-                        // Backend will automatically connect to the frontend socket
-                        // Apply language setting
-                        if rust_i18n::locale().to_string() != config.interface_language {
-                            crate::set_locale(config.interface_language.clone());
-                        }
-                    }
-
-                    if ui.button(t!("settings.reset")).clicked() {
-                        if let Err(e) = self.config_manager.reload() {
-                            eprintln!("Failed to reload config: {}", e);
-                        }
-
-                        // Restart backend to apply reset configuration
-                        if let Err(e) = self.backend_manager.restart_backend() {
-                            log::error!("{}", t!("config.reset.restart.backend.failed", error = e));
-                        }
-
-                        // Backend will automatically connect to the frontend socket
-                    }
+                    ui.label(t!("settings.audio.channel_mix_mode"));
+                    egui::ComboBox::from_id_salt("channel_mix_mode")
+                        .selected_text(match config.audio.channel_mix_mode {
+                            common::ChannelMixMode::MixToMono => {
+                                t!("settings.audio.mix_to_mono")
+                            }
+                            common::ChannelMixMode::FirstChannel => {
+                                t!("settings.audio.first_channel")
+                            }
+                            common::ChannelMixMode::SecondChannel => {
+                                t!("settings.audio.second_channel")
+                            }
+                        })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(
+                                &mut config.audio.channel_mix_mode,
+                                common::ChannelMixMode::MixToMono,
+                                t!("settings.audio.mix_to_mono"),
+                            );
+                            ui.selectable_value(
+                                &mut config.audio.channel_mix_mode,
+                                common::ChannelMixMode::FirstChannel,
+                                t!("settings.audio.first_channel"),
+                            );
+                            ui.selectable_value(
+                                &mut config.audio.channel_mix_mode,
+                                common::ChannelMixMode::SecondChannel,
+                                t!("settings.audio.second_channel"),
+                            );
+                        });
                 });
             });
     }
@@ -679,7 +756,7 @@ impl VrcSttApp {
                 }
 
                 egui::Grid::new("logs_grid")
-                    .num_columns(3)
+                    .num_columns(2)
                     .spacing([8.0, 2.0])
                     .striped(true)
                     .show(ui, |ui| {
@@ -690,23 +767,6 @@ impl VrcSttApp {
                                 Color32::from_gray(150),
                                 11.0,
                             ));
-
-                            // Log type indicator
-                            let (type_text, color) = match item.log_type {
-                                LogType::InternalInfo => {
-                                    (t!("log.type.app.info"), Color32::from_rgb(100, 150, 255))
-                                } // Blue
-                                LogType::InternalError => {
-                                    (t!("log.type.app.error"), Color32::from_rgb(255, 100, 100))
-                                } // Red
-                                LogType::BackendOutput => {
-                                    (t!("log.type.stdout"), Color32::from_rgb(150, 150, 150))
-                                } // Gray
-                                LogType::BackendLog => {
-                                    (t!("log.type.stderr"), Color32::from_rgb(180, 180, 180))
-                                } // Light gray
-                            };
-                            ui.label(utils::colored_text(type_text.as_ref(), color, 11.0));
 
                             // Log message
                             let text_color = item.color();
@@ -722,6 +782,152 @@ impl VrcSttApp {
                             ui.end_row();
                         }
                     });
+            });
+    }
+
+    fn render_about(&self, ui: &mut Ui) {
+        ui.heading(t!("about.title"));
+        ui.add_space(12.0);
+
+        egui::ScrollArea::vertical()
+            .auto_shrink([false; 2])
+            .show(ui, |ui| {
+                // Software information section
+                ui.label(
+                    RichText::new(t!("about.software.info"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
+
+                egui::Grid::new("software_info_grid")
+                    .num_columns(2)
+                    .spacing([12.0, 6.0])
+                    .show(ui, |ui| {
+                        ui.label(utils::colored_text(
+                            &t!("about.app.name"),
+                            Color32::from_gray(180),
+                            13.0,
+                        ));
+                        ui.label(env!("CARGO_PKG_NAME"));
+                        ui.end_row();
+
+                        ui.label(utils::colored_text(
+                            &t!("about.version"),
+                            Color32::from_gray(180),
+                            13.0,
+                        ));
+                        ui.label(env!("CARGO_PKG_VERSION"));
+                        ui.end_row();
+
+                        ui.label(utils::colored_text(
+                            &t!("about.repository"),
+                            Color32::from_gray(180),
+                            13.0,
+                        ));
+                        ui.hyperlink(env!("CARGO_PKG_REPOSITORY"));
+                        ui.end_row();
+                    });
+
+                ui.add_space(20.0);
+
+                // Libraries section
+                ui.label(
+                    RichText::new(t!("about.libraries.attribution"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
+
+                egui::Grid::new("libraries_grid")
+                    .num_columns(2)
+                    .spacing([12.0, 6.0])
+                    .striped(true)
+                    .show(ui, |ui| {
+                        let libraries = [
+                            ("egui/eframe", "MIT/Apache-2.0"),
+                            ("whisper.cpp", "MIT"),
+                            ("cpal", "Apache-2.0"),
+                            ("webrtc-vad", "MIT"),
+                            ("rubato", "MIT"),
+                            ("rosc", "MIT/Apache-2.0"),
+                            ("chrono", "MIT/Apache-2.0"),
+                            ("serde", "MIT/Apache-2.0"),
+                            ("anyhow", "MIT/Apache-2.0"),
+                            ("rust-i18n", "MIT"),
+                            ("uds_windows", "MIT"),
+                        ];
+
+                        for (name, license) in libraries.iter() {
+                            ui.label(*name);
+                            ui.label(
+                                RichText::new(format!("{}", license))
+                                    .color(Color32::from_gray(140))
+                                    .size(12.0),
+                            );
+                            ui.end_row();
+                        }
+                    });
+
+                ui.add_space(20.0);
+
+                // Licenses section
+                ui.label(
+                    RichText::new(t!("about.third.party.licenses"))
+                        .color(Color32::from_rgb(100, 200, 255))
+                        .size(16.0)
+                        .strong(),
+                );
+                ui.separator();
+                ui.add_space(4.0);
+
+                ui.horizontal(|ui| {
+                    if ui.button("MIT License").clicked() {
+                        ui.ctx()
+                            .copy_text(include_str!("../licenses/MIT.txt").to_string());
+                    }
+                    ui.label(
+                        RichText::new("(📋 click to copy)")
+                            .color(Color32::from_gray(140))
+                            .size(11.0),
+                    );
+                });
+
+                ui.horizontal(|ui| {
+                    if ui.button("Apache-2.0 License").clicked() {
+                        ui.ctx()
+                            .copy_text(include_str!("../licenses/APACHE-2.0.txt").to_string());
+                    }
+                    ui.label(
+                        RichText::new("(📋 click to copy)")
+                            .color(Color32::from_gray(140))
+                            .size(11.0),
+                    );
+                });
+
+                // CUDA redistribution notice - only on Windows with cuda feature enabled
+                #[cfg(all(windows, feature = "cuda"))]
+                {
+                    ui.add_space(20.0);
+
+                    ui.label(
+                        RichText::new(t!("about.cuda.redistribution"))
+                            .color(Color32::from_rgb(100, 200, 255))
+                            .size(16.0)
+                            .strong(),
+                    );
+                    ui.separator();
+                    ui.add_space(4.0);
+
+                    ui.hyperlink_to(
+                        "📄 CUDA Toolkit End User License Agreement",
+                        "https://docs.nvidia.com/cuda/eula/index.html",
+                    );
+                }
             });
     }
 }
