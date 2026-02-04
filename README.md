@@ -52,6 +52,8 @@ Check the Logs tab in-app for detailed error messages.
 
 GPL-3.0 licensed.
 
+Art assets are provided under the [CC BY-NC 4.0](CC-BY-NC-4.0) license. Project icon by 清欢NP_C.
+
 ---
 
 **Note**: Unofficial VRChat tool. Use at your own risk.
