@@ -199,7 +199,7 @@ function createPackage(backendType, version, osName, archName) {
     console.log('Temporary directory cleaned up.');
 }
 
-function buildAndPackage() {
+function buildAndPackage(targetBackend) {
     console.log('Starting build and packaging process...');
 
     // Check versions first
@@ -212,23 +212,54 @@ function buildAndPackage() {
     // Build frontend (only needs to be built once, shared by both backends)
     buildFrontend();
 
-    // Build and package Vulkan version
-    console.log('\n========== Building VULKAN backend ==========');
-    buildBackend('vulkan');
-    createPackage('vulkan', version, osName, archName);
+    const completedPackages = [];
 
-    // Build and package CUDA version
-    console.log('\n========== Building CUDA backend ==========');
-    buildBackend('cuda');
-    createPackage('cuda', version, osName, archName);
+    if (targetBackend === null || targetBackend === 'vulkan') {
+        // Build and package Vulkan version
+        console.log('\n========== Building VULKAN backend ==========');
+        buildBackend('vulkan');
+        createPackage('vulkan', version, osName, archName);
+        completedPackages.push(`target/vulkan-${osName}-${archName}-${version}.7z`);
+    }
+
+    if (targetBackend === null || targetBackend === 'cuda') {
+        // Build and package CUDA version
+        console.log('\n========== Building CUDA backend ==========');
+        buildBackend('cuda');
+        createPackage('cuda', version, osName, archName);
+        completedPackages.push(`target/cuda-${osName}-${archName}-${version}.7z`);
+    }
 
     console.log('\n========================================');
     console.log('All packaging completed successfully!');
-    console.log(`Output files (in target/ directory):`);
-    console.log(`  - target/vulkan-${osName}-${archName}-${version}.7z`);
-    console.log(`  - target/cuda-${osName}-${archName}-${version}.7z`);
+    console.log('Output files (in target/ directory):');
+    completedPackages.forEach(pkg => console.log(`  - ${pkg}`));
     console.log('========================================');
 }
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+let targetBackend = null;
+
+if (args.length > 0) {
+    const arg = args[0].toLowerCase();
+    if (arg === 'cuda') {
+        targetBackend = 'cuda';
+        console.log('Target: CUDA only');
+    } else if (arg === 'vulkan') {
+        targetBackend = 'vulkan';
+        console.log('Target: Vulkan only');
+    } else {
+        console.error(`Unknown backend type: ${arg}`);
+        console.error('Usage: node release.js [cuda|vulkan]');
+        console.error('  - no argument: build both cuda and vulkan');
+        console.error('  - cuda: build cuda only');
+        console.error('  - vulkan: build vulkan only');
+        process.exit(1);
+    }
+} else {
+    console.log('Target: All backends (cuda + vulkan)');
+}
+
 // Run the build and packaging
-buildAndPackage();
+buildAndPackage(targetBackend);

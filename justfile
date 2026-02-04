@@ -8,8 +8,8 @@ cuda:
     cargo build -p backend --features cuda --no-default-features
     RUST_LOG=info VRC_STT_BACKEND=./target/debug/backend cargo run -p frontend --features cuda
 
-release:
-    node release.js
+release backend="":
+    node release.js {{backend}}
 
 get-model:
     wget https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O model/medium.bin

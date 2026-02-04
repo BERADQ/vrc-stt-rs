@@ -1,4 +1,3 @@
-use std::env::current_dir;
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
 use std::thread;
