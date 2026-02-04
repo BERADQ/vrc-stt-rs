@@ -16,5 +16,8 @@ serde.workspace = true
 serde_json.workspace = true
 uds_windows.workspace = true
 
+[build-dependencies]
+winres = "0.1"
+
 [features]
 cuda = []
