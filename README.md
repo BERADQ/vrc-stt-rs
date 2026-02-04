@@ -40,6 +40,12 @@ Select your preferred model, language, and audio settings in the app's Settings 
 - `medium.bin`: Recommended for accuracy
 - `large.bin`: Best accuracy, slower
 
+## Roadmap
+
+- [ ] Push-to-talk support
+- [ ] Optional automatic model download
+- [ ] Recording pause button
+
 ## Troubleshooting
 
 No audio? Check microphone permissions and system default device  

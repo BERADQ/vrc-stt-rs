@@ -209,6 +209,10 @@ about.app.name:
   en: "Application Name"
   zh-CN: "应用名称"
   ja-JP: "アプリケーション名"
+about.app.name.vrc-stt-rs:
+  en: "VRChat STT RS"
+  zh-CN: "VRChat STT RS"
+  ja-JP: "VRChat STT RS"
 about.version:
   en: "Version"
   zh-CN: "版本"

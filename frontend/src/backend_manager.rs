@@ -74,16 +74,6 @@ impl BackendManager {
             command.env("RUST_LOG", "warn");
         }
 
-        #[cfg(all(target_os = "windows", feature = "cuda"))]
-        {
-            use std::env::current_exe;
-            use std::os::windows::process::CommandExt;
-
-            command.creation_flags(0x08000000); // CREATE_NO_WINDOW
-            command.env("CUDA_PATH", current_exe()?);
-            command.env("LD_LIBRARY_PATH", current_exe()?);
-        }
-
         // Start the backend process with captured stdout and stderr
         let mut child = command
             .current_dir(&std::env::current_dir()?)

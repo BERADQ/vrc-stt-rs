@@ -1,8 +1,8 @@
 use chrono::{DateTime, Local};
-use common::{config, Config, ConfigManager};
+use common::{Config, ConfigManager, config};
 use eframe::egui::{self, Color32, Context, RichText, Ui};
 use rust_i18n::t;
-use std::sync::{mpsc, Arc};
+use std::sync::{Arc, mpsc};
 
 use crate::backend_manager::BackendManager;
 use crate::constants;
@@ -647,15 +647,21 @@ impl VrcSttApp {
                     egui::ComboBox::from_id_salt("vad_mode")
                         .selected_text(match config.vad.mode {
                             common::config::VadMode::Quality => t!("settings.vad.mode.quality"),
-                            common::config::VadMode::LowBitrate => t!("settings.vad.mode.low_bitrate"),
-                            common::config::VadMode::Aggressive => t!("settings.vad.mode.aggressive"),
-                            common::config::VadMode::VeryAggressive => t!("settings.vad.mode.very_aggressive"),
+                            common::config::VadMode::LowBitrate => {
+                                t!("settings.vad.mode.low_bitrate")
+                            }
+                            common::config::VadMode::Aggressive => {
+                                t!("settings.vad.mode.aggressive")
+                            }
+                            common::config::VadMode::VeryAggressive => {
+                                t!("settings.vad.mode.very_aggressive")
+                            }
                         })
                         .show_ui(ui, |ui| {
                             ui.selectable_value(
                                 &mut config.vad.mode,
                                 common::config::VadMode::Quality,
-                                t!("settings.vad.mode.normal"),
+                                t!("settings.vad.mode.quality"),
                             );
                             ui.selectable_value(
                                 &mut config.vad.mode,
@@ -848,7 +854,7 @@ impl VrcSttApp {
                             Color32::from_gray(180),
                             13.0,
                         ));
-                        ui.label(env!("CARGO_PKG_NAME"));
+                        ui.label(t!("about.app.name.vrc-stt-rs"));
                         ui.end_row();
 
                         ui.label(utils::colored_text(
