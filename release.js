@@ -4,6 +4,55 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
+function loadEnv() {
+  const envPath = path.join(process.cwd(), ".env");
+
+  if (!fs.existsSync(envPath)) {
+    console.log("No .env file found, skipping environment variable loading.");
+    return;
+  }
+
+  console.log("Loading environment variables from .env...");
+
+  const content = fs.readFileSync(envPath, "utf-8");
+  const lines = content.split(/\r?\n/);
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex === -1) {
+      continue;
+    }
+
+    const key = trimmed.slice(0, eqIndex).trim();
+    let value = trimmed.slice(eqIndex + 1).trim();
+
+    // Remove surrounding quotes if present
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    // Only set if not already defined in environment
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+      console.log(`  Set: ${key}=${value}`);
+    } else {
+      console.log(`  Skipped (already set): ${key}`);
+    }
+  }
+
+  console.log("Environment variables loaded successfully.");
+}
+
 function checkPackageVersions() {
   try {
     // Run cargo metadata to get package information
@@ -102,7 +151,7 @@ function buildBackend(backendType) {
   }
 
   try {
-    execSync("cargo clean -p whisper-rs-sys --workspace", {
+    execSync("cargo clean -p whisper-rs-sys --workspace -r", {
       stdio: "inherit",
       cwd: process.cwd(),
     });
@@ -309,6 +358,9 @@ function createPackage(backendType, version, osName, archName) {
 
 function buildAndPackage(targetBackend) {
   console.log("Starting build and packaging process...");
+
+  // Load environment variables from .env file before building
+  loadEnv();
 
   // Check versions first
   const version = checkPackageVersions();
