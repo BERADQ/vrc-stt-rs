@@ -56,9 +56,12 @@ impl BackendManager {
         self.stop_backend();
 
         // Get backend executable path from environment variable or use default
-        let mut exe_path = env::current_exe()?.parent().ok_or(anyhow::anyhow!(
-            "Failed to get parent directory of executable"
-        ))?.to_path_buf();
+        let mut exe_path = env::current_exe()?
+            .parent()
+            .ok_or(anyhow::anyhow!(
+                "Failed to get parent directory of executable"
+            ))?
+            .to_path_buf();
         exe_path.push(env::var("VRC_STT_BACKEND_NAME").unwrap_or_else(|_| String::from("backend")));
         let backend_path =
             env::var("VRC_STT_BACKEND").unwrap_or_else(|_| exe_path.display().to_string());
@@ -78,11 +81,18 @@ impl BackendManager {
             command.env("RUST_LOG", "warn");
         }
 
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        }
+
         // Start the backend process with captured stdout and stderr
         let mut child = command
             .current_dir(&std::env::current_dir()?)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .stdin(Stdio::null())
             .spawn()
             .map_err(|e| {
                 // Send error log
