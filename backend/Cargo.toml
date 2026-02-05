@@ -20,7 +20,7 @@ serde.workspace = true
 serde_json.workspace = true
 uds_windows.workspace = true
 webrtc-vad = "0.4.0"
-whisper-rs = { version = "0.15.1" }
+whisper-rs = { version = "0.15.1", features = ["log_backend"] }
 
 [features]
 default = ["vulkan"]
