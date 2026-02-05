@@ -2,11 +2,11 @@
 
 default:
     cargo build -p backend
-    RUST_LOG=info VRC_STT_BACKEND=./target/debug/backend cargo run -p frontend
+    RUST_LOG=info cargo run -p frontend
 
 cuda:
     cargo build -p backend --features cuda --no-default-features
-    RUST_LOG=info VRC_STT_BACKEND=./target/debug/backend cargo run -p frontend --features cuda
+    RUST_LOG=info cargo run -p frontend --features cuda
 
 release backend="":
     node release.js {{backend}}

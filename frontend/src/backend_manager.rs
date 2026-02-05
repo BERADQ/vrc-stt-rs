@@ -1,6 +1,6 @@
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
-use std::thread;
+use std::{env, thread};
 
 use rust_i18n::t;
 
@@ -56,8 +56,12 @@ impl BackendManager {
         self.stop_backend();
 
         // Get backend executable path from environment variable or use default
+        let mut exe_path = env::current_exe()?.parent().ok_or(anyhow::anyhow!(
+            "Failed to get parent directory of executable"
+        ))?.to_path_buf();
+        exe_path.push(env::var("VRC_STT_BACKEND_NAME").unwrap_or_else(|_| String::from("backend")));
         let backend_path =
-            std::env::var("VRC_STT_BACKEND").unwrap_or_else(|_| "backend".to_string());
+            env::var("VRC_STT_BACKEND").unwrap_or_else(|_| exe_path.display().to_string());
 
         // Send info log
         if let Some(tx) = &self.log_tx {
